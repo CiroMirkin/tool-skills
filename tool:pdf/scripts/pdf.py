@@ -13,6 +13,10 @@ Un bloque `![epigrafe](diagrama.svg)` inserta un diagrama centrado en la pagina,
 relativa al archivo de entrada. En dos columnas interrumpe ambas: el texto anterior se reparte
 parejo arriba y el siguiente sigue debajo. Sin --color, un SVG con colores es un error.
 
+Un bloque que no llega a mostrar MIN_LINES lineas empieza en la columna o pagina siguiente, y un
+titulo (o un parrafo todo en negrita) va pegado al comienzo de lo que le sigue. Si aun asi una
+pagina termina con un titulo o un bloque recien empezado, el script sale con error.
+
   columnas     A4, dos columnas, justificado (por defecto)
   simple       A4, una columna, justificado
   cuadernillo  paginas A5 impuestas de a dos por hoja A4 apaisada, en orden de cuadernillo:
@@ -30,6 +34,8 @@ from svglib.svglib import svg2rlg
 
 MARGIN, GUTTER, BODY, HEAD = 0.6 * inch, 0.3 * inch, 12, 14
 NEEDED = 72  # lo minimo que debe quedar en la pagina para empezar el texto siguiente
+MIN_LINES = 3  # lineas que un bloque cortado debe mostrar antes del corte
+LAST_DRAWN = {}  # pagina -> ultimo elemento dibujado en ella
 
 
 # caracteres que Helvetica no tiene
@@ -43,6 +49,89 @@ def inline(s):
     s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2" color="#1a5fb4">\1</a>', s)
     s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
     return re.sub(r"\*(.+?)\*", r"<i>\1</i>", s)
+
+
+class Block(Paragraph):
+    def split(self, aW, aH):
+        return [] if aH < MIN_LINES * self.style.leading else super().split(aW, aH)
+
+    def draw(self):
+        LAST_DRAWN[self.canv.getPageNumber()] = self
+        super().draw()
+
+
+class Head(Block):
+    """Titulo o rotulo: va pegado a lo que le sigue."""
+
+
+class Kept(Flowable):
+    """Titulos con lo que les sigue. Se corta como su ultimo elemento, nunca antes de el."""
+
+    def __init__(self, heads, next):
+        super().__init__()
+        self.heads, self.next = heads, next
+
+    def getSpaceBefore(self):
+        return self.heads[0].getSpaceBefore()
+
+    def getSpaceAfter(self):
+        return self.next.getSpaceAfter()
+
+    def layout(self, width):
+        """Cada titulo con la altura a la que termina, medida desde arriba."""
+        y, out = 0, []
+        for head, following in zip(self.heads, self.heads[1:] + [self.next]):
+            y += head.wrap(width, 1000)[1]
+            out.append((head, y))
+            y += max(head.getSpaceAfter(), following.getSpaceBefore())
+        return out, y
+
+    def wrap(self, aW, aH):
+        self.width = aW
+        self.heads_h = self.layout(aW)[1]
+        self.height = self.heads_h + self.next.wrapOn(self.canv, aW, aH - self.heads_h)[1]
+        return aW, self.height
+
+    def split(self, aW, aH):
+        heads_h = self.layout(aW)[1]
+        parts = self.next.splitOn(self.canv, aW, aH - heads_h)
+        if not parts:
+            return []
+        first = Kept(self.heads, parts[0])
+        first.canv = self.canv
+        first.wrap(aW, aH)
+        del first.canv
+        return [first, *parts[1:]]
+
+    def draw(self):
+        for head, y in self.layout(self.width)[0]:
+            head.drawOn(self.canv, 0, self.height - y)
+        self.next.drawOn(self.canv, 0, 0)
+
+
+def keep_with_next(story):
+    out, heads = [], []
+    for f in story:
+        if isinstance(f, Head):
+            heads.append(f)
+        elif heads:
+            out.append(Kept(heads, f))
+            heads = []
+        else:
+            out.append(f)
+    return out + heads
+
+
+def check_page_ends():
+    problems = []
+    for page in sorted(LAST_DRAWN)[:-1]:
+        f = LAST_DRAWN[page]
+        if isinstance(f, Head):
+            problems.append(f"pagina {page}: termina con el titulo \"{f.getPlainText()}\"")
+        elif isinstance(f, Block) and getattr(f, "_JustifyLast", 0) and len(f.blPara.lines) < MIN_LINES:
+            problems.append(f"pagina {page}: bloque cortado tras {len(f.blPara.lines)} lineas: \"{f.getPlainText()[:60]}\"")
+    if problems:
+        raise SystemExit("cortes al final de pagina:\n" + "\n".join(problems))
 
 
 def has_color(node):
@@ -96,6 +185,7 @@ class Figures(Flowable):
         return parts
 
     def draw(self):
+        LAST_DRAWN[self.canv.getPageNumber()] = self
         y = self.content_h + self.pad
         for drawing, caption in self.figures:
             y -= self.GAP + drawing.height
@@ -118,7 +208,7 @@ def bands(story, cols):
             text.clear()
 
     for f in story:
-        if isinstance(f, Figures):
+        if isinstance(f, Figures) or isinstance(f, Kept) and isinstance(f.next, Figures):
             flush()
             out.append(f)
         else:
@@ -132,7 +222,7 @@ def story_from(text, body, head, sub, quote, figure, page_h):
     for block in re.split(r"\n\s*\n", text.replace("\r", "").strip()):
         lines = [l.strip() for l in block.splitlines()]
         if all(re.match(r"[-*] ", l) for l in lines):
-            story += [Paragraph(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
+            story += [Block(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
             continue
         line = " ".join(lines)
         fig = re.fullmatch(r"!\[(.*?)\]\((.+)\)", line)
@@ -144,15 +234,17 @@ def story_from(text, body, head, sub, quote, figure, page_h):
             else:
                 story.append(Figures([f], page_h))
         elif all(l.startswith(">") for l in lines):
-            story.append(Paragraph(inline(" ".join(l[1:].strip() for l in lines)), quote))
+            story.append(Block(inline(" ".join(l[1:].strip() for l in lines)), quote))
         elif line.startswith("### "):
-            story.append(Paragraph(inline(line[4:]), sub))
+            story.append(Head(inline(line[4:]), sub))
         elif line.startswith("## "):
-            story.append(Paragraph(inline(line[3:]), head))
+            story.append(Head(inline(line[3:]), head))
         elif line.startswith("# ") and title is None and not story:
             title = Paragraph(inline(line[2:]), head)
+        elif re.fullmatch(r"\*\*[^*]+\*\*", line):
+            story.append(Head(inline(line), body))
         else:
-            story.append(Paragraph(inline(line), body))
+            story.append(Block(inline(line), body))
     return title, story
 
 
@@ -177,6 +269,8 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     title, story = story_from(text, body, head, sub, quote, figure, H - 2 * margin)
     if story and isinstance(story[-1], Figures):
         story[-1].last = True
+    has_figures = any(isinstance(f, Figures) for f in story)
+    story = keep_with_next(story)
     col_w = (W - 2 * margin - GUTTER * (cols - 1)) / cols
 
     def columns(top):
@@ -187,7 +281,7 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
         canvas.drawCentredString(W / 2, margin / 2, str(doc.page))
 
     templates = [PageTemplate(id="rest", frames=columns(H - margin), onPage=page_number)]
-    if cols > 1 and any(isinstance(f, Figures) for f in story):
+    if cols > 1 and has_figures:
         templates = [PageTemplate(id="bands", frames=[Frame(margin, margin, W - 2 * margin, H - 2 * margin, 0, 0, 0, 0, id="full")], onPage=page_number)]
         story = ([title] if title else []) + bands(story, cols)
     elif title:
@@ -196,6 +290,7 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
         templates.insert(0, PageTemplate(id="first", frames=first, onPage=page_number))
         story = [title, NextPageTemplate("rest"), FrameBreak()] + story
     BaseDocTemplate(out, pagesize=pagesize, pageTemplates=templates).build(story)
+    check_page_ends()
 
 
 def booklet(src, out):

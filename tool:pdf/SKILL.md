@@ -17,6 +17,8 @@ uv run ~/.claude/skills/tool:pdf/scripts/pdf.py <entrada.txt> [-f columnas|simpl
 
 La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
 
+Cada bloque cortado muestra al menos 3 líneas antes del corte; si no llega, empieza en la columna o página siguiente y deja ese espacio en blanco. Un título, o un párrafo todo en negrita como `**[ESTUDIAR]**`, va pegado al comienzo de lo que le sigue. El script lo valida: si una página igual termina con un título o un bloque recién empezado, sale con error nombrando la página y el texto, y ese PDF no se entrega.
+
 ## Diagramas
 
 Un bloque `![epígrafe](diagrama.svg)` inserta el SVG centrado en la página, con la ruta relativa al archivo de entrada; el epígrafe es opcional. En `columnas` el diagrama corta las dos columnas y queda centrado sobre el espacio entre ellas: el texto anterior se reparte parejo arriba y el siguiente sigue abajo.
