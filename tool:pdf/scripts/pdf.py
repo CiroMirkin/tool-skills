@@ -25,10 +25,11 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.pagesizes import A4, A5
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import BalancedColumns, BaseDocTemplate, Frame, FrameBreak, KeepTogether, NextPageTemplate, PageTemplate, Paragraph, Spacer
+from reportlab.platypus import BalancedColumns, BaseDocTemplate, Flowable, Frame, FrameBreak, NextPageTemplate, PageTemplate, Paragraph
 from svglib.svglib import svg2rlg
 
 MARGIN, GUTTER, BODY, HEAD = 0.6 * inch, 0.3 * inch, 12, 14
+NEEDED = 72  # lo minimo que debe quedar en la pagina para empezar el texto siguiente
 
 
 # caracteres que Helvetica no tiene
@@ -61,8 +62,50 @@ def diagram(path, caption, max_w, max_h, color, style):
     k = min(1, max_w / drawing.width, max_h / drawing.height)
     drawing.scale(k, k)
     drawing.width, drawing.height = drawing.width * k, drawing.height * k
-    drawing.hAlign = "CENTER"
-    return KeepTogether([Spacer(1, 6), drawing, Spacer(1, 6)] + ([Paragraph(inline(caption), style)] if caption else []))
+    return drawing, Paragraph(inline(caption), style) if caption else None
+
+
+class Figures(Flowable):
+    """Diagramas apilados que no se separan. Si lo que sigue no entra en el resto de la pagina,
+    se centran en ese espacio."""
+    GAP, AFTER = 6, 8
+
+    def __init__(self, figures, page_h):
+        super().__init__()
+        self.figures, self.page_h, self.last = figures, page_h, False
+
+    def height_for(self, width):
+        h = 0
+        for drawing, caption in self.figures:
+            h += 2 * self.GAP + drawing.height
+            if caption:
+                h += caption.wrap(width, 1000)[1] + self.AFTER
+        return h
+
+    def wrap(self, aW, aH):
+        self.width, self.content_h = aW, self.height_for(aW)
+        left = aH - self.content_h
+        self.pad = left / 2 if 0 < left and (self.last or left < NEEDED) else 0
+        return aW, self.content_h + 2 * self.pad
+
+    def split(self, aW, aH):
+        if self.height_for(aW) <= self.page_h or len(self.figures) == 1:
+            return []
+        parts = [Figures([f], self.page_h) for f in self.figures]
+        parts[-1].last = self.last
+        return parts
+
+    def draw(self):
+        y = self.content_h + self.pad
+        for drawing, caption in self.figures:
+            y -= self.GAP + drawing.height
+            drawing.drawOn(self.canv, (self.width - drawing.width) / 2, y)
+            y -= self.GAP
+            if caption:
+                h = caption.wrap(self.width, 1000)[1]
+                y -= h
+                caption.drawOn(self.canv, 0, y)
+                y -= self.AFTER
 
 
 def bands(story, cols):
@@ -71,11 +114,11 @@ def bands(story, cols):
 
     def flush():
         if text:
-            out.append(BalancedColumns(text[:], nCols=cols, innerPadding=GUTTER, leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0))
+            out.append(BalancedColumns(text[:], nCols=cols, needed=NEEDED, innerPadding=GUTTER, leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0))
             text.clear()
 
     for f in story:
-        if isinstance(f, KeepTogether):
+        if isinstance(f, Figures):
             flush()
             out.append(f)
         else:
@@ -84,7 +127,7 @@ def bands(story, cols):
     return out
 
 
-def story_from(text, body, head, sub, quote, figure):
+def story_from(text, body, head, sub, quote, figure, page_h):
     title, story = None, []
     for block in re.split(r"\n\s*\n", text.replace("\r", "").strip()):
         lines = [l.strip() for l in block.splitlines()]
@@ -94,7 +137,12 @@ def story_from(text, body, head, sub, quote, figure):
         line = " ".join(lines)
         fig = re.fullmatch(r"!\[(.*?)\]\((.+)\)", line)
         if fig:
-            story.append(figure(*fig.groups()))
+            f = figure(*fig.groups())
+            # diagramas seguidos van juntos, uno debajo del otro
+            if story and isinstance(story[-1], Figures):
+                story[-1].figures.append(f)
+            else:
+                story.append(Figures([f], page_h))
         elif all(l.startswith(">") for l in lines):
             story.append(Paragraph(inline(" ".join(l[1:].strip() for l in lines)), quote))
         elif line.startswith("### "):
@@ -126,7 +174,9 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     def figure(caption_text, path):
         return diagram(base / path, caption_text, W - 2 * margin, (H - 2 * margin) * 0.6, color, caption)
 
-    title, story = story_from(text, body, head, sub, quote, figure)
+    title, story = story_from(text, body, head, sub, quote, figure, H - 2 * margin)
+    if story and isinstance(story[-1], Figures):
+        story[-1].last = True
     col_w = (W - 2 * margin - GUTTER * (cols - 1)) / cols
 
     def columns(top):
@@ -137,7 +187,7 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
         canvas.drawCentredString(W / 2, margin / 2, str(doc.page))
 
     templates = [PageTemplate(id="rest", frames=columns(H - margin), onPage=page_number)]
-    if cols > 1 and any(isinstance(f, KeepTogether) for f in story):
+    if cols > 1 and any(isinstance(f, Figures) for f in story):
         templates = [PageTemplate(id="bands", frames=[Frame(margin, margin, W - 2 * margin, H - 2 * margin, 0, 0, 0, 0, id="full")], onPage=page_number)]
         story = ([title] if title else []) + bands(story, cols)
     elif title:
