@@ -18,7 +18,7 @@ Ocho skills en español, cada una con sus pasos y su criterio de terminado, para
 |---|---|
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
-| `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir. |
+| `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
 | `tool:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
 | `tool:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
 | `tool:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, con el enlace de cada fuente. |
