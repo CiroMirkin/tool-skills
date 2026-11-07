@@ -1,6 +1,6 @@
 ---
 name: tool:roadmap
-description: Investiga uno o más temas en fuentes (las que pase el usuario y las que se encuentren en internet) y escribe un roadmap de estudio en .md aplicado al proyecto del usuario, separando qué estudiar y qué solo conocer, con escenarios concretos y el enlace de cada fuente. Usar cuando el usuario pida un roadmap, una guía de estudio o una síntesis de un tema a partir de fuentes.
+description: Investiga uno o más temas en fuentes (las que pase el usuario y las que se encuentren en internet) y escribe un roadmap de estudio en .md aplicado al proyecto del usuario (o un vistazo general del área si no hay proyecto), separando qué estudiar y qué solo conocer, con escenarios concretos y el enlace de cada fuente. Usar cuando el usuario pida un roadmap, una guía de estudio o una síntesis de un tema a partir de fuentes.
 ---
 
 # Roadmap de estudio
@@ -16,7 +16,16 @@ El roadmap es una **síntesis aplicada**: no explica un tema en general, sino qu
    - las **fuentes del usuario**: URLs, repos, PDFs o archivos locales. Si el tema es de desarrollo de software, se suman siempre las **fuentes fijas** de [`fuentes.md`](fuentes.md);
    - el destino: el que pida el usuario; si no, donde ya guarda sus documentos de estudio, siguiendo su convención de nombres; si no hay ninguna, `roadmap-<tema>.md` en el directorio actual.
 
-   Un dato ambiguo ("10 mil por organizar") se interpreta de la forma más razonable y se anota como **supuesto**. Si no hay un caso concreto, preguntar por él antes de seguir: sin caso no hay escenarios. Hecho cuando están anotados los temas, el caso, los supuestos y la lista de fuentes del usuario.
+   Un dato ambiguo ("10 mil por organizar") se interpreta de la forma más razonable y se anota como **supuesto**.
+
+   Si el pedido no trae un caso, preguntar con `AskUserQuestion` antes de seguir:
+   - **Escribir el caso** (recomendada): esperar a que lo escriba y seguir.
+   - **Sin caso**: vistazo general del área; versión floja, útil para orientarse, no para decidir qué necesita un proyecto. Leer [`vistazo.md`](vistazo.md) y seguir los pasos con sus cambios.
+   - **Caso ficticio** (opcional, si el tema da para proponer uno): la opción trae la propuesta en una línea, con entidades y números. Se sigue como un caso normal: sus números son supuestos y el documento lo declara ficticio.
+
+   Un pedido que ya dice que quiere un vistazo sin proyecto cuenta como **Sin caso**, sin preguntar.
+
+   Hecho cuando están anotados los temas, el caso, los supuestos y la lista de fuentes del usuario.
 
 2. **Dimensionar.** Si el caso trae números, hacer la cuenta *back-of-the-envelope*: carga por segundo, filas por año y volumen con 100 y 1.000 instancias del caso. Cerrar con una conclusión de una línea sobre dónde está lo difícil (escala, correctitud, seguridad, operación). Esa conclusión decide qué va a ESTUDIAR y qué a CONOCER. Hecho cuando cada número del caso tiene su cuenta.
 
