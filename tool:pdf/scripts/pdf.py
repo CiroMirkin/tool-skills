@@ -133,8 +133,10 @@ class Kept(Flowable):
         return [first, *parts[1:]]
 
     def draw(self):
+        # si lo que sigue se centra en la pagina, los titulos bajan con el
+        pad = getattr(self.next, "pad", 0)
         for head, y in self.layout(self.width)[0]:
-            head.drawOn(self.canv, 0, self.height - y)
+            head.drawOn(self.canv, 0, self.height - y - pad)
         self.next.drawOn(self.canv, 0, 0)
 
 
