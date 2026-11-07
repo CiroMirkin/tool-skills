@@ -50,6 +50,11 @@ Aplicar cambios recién cuando el usuario los apruebe. Al borrar un duplicado, c
   - *Invocado por el test*: el test llama directamente a una función del mock.
   - *Mock contra sí mismo*: configura el mock para devolver X y comprueba que salió X, sin que el código haga nada con X.
   - *Verde sin el código*: sigue en verde con el código de producción borrado (paso 4). No prueba nada, y el test también tiene que garantizar que el código funciona.
+- **Test complejo** → simplificar: el cuerpo de un test es lineal y explícito, porque un test no tiene tests que lo protejan y cada rama suya es un lugar más donde equivocarse. Muchas líneas y detalles no son un problema. La simplificación se hace manteniendo el verde todo el tiempo.
+  - *Condicional*: un `if` o ternario dentro del test. Casi nunca se justifica, y suele esconder dos casos que van en dos tests.
+  - *Bucle*: recorre una lista corta en vez de acceder directo a sus índices con más sentencias.
+  - *Indirección prematura*: un método de apoyo con lógica propia, o que esconde lo que se está probando. Los métodos de apoyo se extraen en la fase de refactor, con los tests ya escritos y en verde.
+  - *Helper con lógica*: un método de apoyo solo lleva condicionales o bucles cuando lee o escribe algo que no se puede tocar de otra forma (recorrer una hoja de Excel) y no hay manera de evitarlo. Como esa lógica también puede fallar, lleva su propio test. Si no cumple las dos cosas, es hallazgo.
 - **Mentiroso** → fortalecer: parece proteger algo y no lo nota si se rompe. Solo con evidencia: un mutante **vivo** sobre lo que el test promete, o un assert más débil que lo que promete el nombre (`rechaza_email_invalido` que solo mira `status != 200`, y un 500 también pasa).
 - **No cumple FIRST** → corregir: cada test es *Fast*, *Independent*, *Repeatable*, *Self-validated* y *Timely*.
   - *Lento*: tarda mucho más que sus vecinos sin que lo justifique lo que protege.
