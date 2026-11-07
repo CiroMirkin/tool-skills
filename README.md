@@ -16,13 +16,13 @@ Diez skills en español, cada una con sus pasos y su criterio de terminado, para
 
 | Skill | Qué hace |
 |---|---|
+| `tool:audit-tests` | **(En etapa de prueba)** Audita tests con mutantes y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
 | `tool:doc-estudio` | Escribe un `.md` que enseña un tema desde lo básico hasta la profundidad, con código verificado, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
 | `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
 | `tool:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
 | `tool:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
-| `tool:review-tests` | **(En etapa de prueba)** Audita tests con mutantes y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
 | `tool:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, con el enlace de cada fuente. |
 | `tool:subtitulos` | Busca, descarga y sincroniza subtítulos para un video local, y verifica contra el audio que encajan. |
 | `tool:use-cases` | Genera el documento de casos de uso de un proyecto (actores, historias de usuario y reglas de negocio) para alguien no técnico. |
