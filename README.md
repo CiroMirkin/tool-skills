@@ -10,12 +10,13 @@
 
 </div>
 
-Ocho skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Nueve skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
 | Skill | Qué hace |
 |---|---|
+| `tool:doc-estudio` | Escribe un `.md` que enseña un tema desde lo básico hasta la profundidad, con código verificado, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
 | `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
@@ -40,6 +41,7 @@ Los enlaces hacen que un `git pull` actualice las skills. Para instalar solo una
 
 Algunas skills necesitan algo más:
 
+- **`tool:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
 
