@@ -1,9 +1,9 @@
 ---
-name: tool:review-tests
+name: tool:audit-tests
 description: Audita tests y señala cuáles no protegen nada, cuáles son frágiles, cuáles no notarían una regresión y qué comportamiento quedó sin test. Usar cuando el usuario pida revisar, limpiar o podar tests, pregunte si detectan bugs o cuáles faltan, o quiera revisar un lote de tests escritos por una IA.
 ---
 
-# Revisar tests
+# Auditar tests
 
 > **En etapa de prueba.** El reporte lo aclara en su primera línea, para que sus hallazgos se revisen con más cuidado.
 
