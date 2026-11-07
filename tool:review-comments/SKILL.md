@@ -22,41 +22,132 @@ Lo que el usuario nombre (archivo, carpeta, commit, rama). Si no nombra nada, el
    // 7rem = header h-16 + py-6 del layout (Alto fijo para que solo scrollee la tabla)
    ```
 
-   Si la propuesta es borrar, el bloque lleva solo el comentario actual y abajo dice *borrar*. En un hueco, el bloque lleva el código y, abajo, el comentario nuevo o la pregunta. El código entra en el bloque solo cuando también cambia (ej. un nombre mejor en vez de un eco). Aplicar los cambios recién cuando el usuario los apruebe.
+   Si la propuesta es borrar, el bloque lleva solo el comentario actual y abajo dice *borrar*. En un hueco, el bloque lleva el código y, abajo, el comentario nuevo o la pregunta. En una sección, el bloque lleva el separador y, abajo, el archivo propuesto. El código entra en el bloque solo cuando también cambia (ej. un nombre mejor en vez de un eco). Aplicar los cambios recién cuando el usuario los apruebe.
 
 ## Categorías
 
 - **Se queda**: cuenta algo invisible (ver la lista de abajo).
-- **Eco** → borrar: repite el nombre de la función, variable, clase o método, o narra lo que la línea ya dice (`# incrementa el contador`). También es eco el ruido: código comentado (para eso está git), separadores decorativos, `// fin del if`, autor y fecha, historial de cambios. Si el eco existe porque el nombre es malo, proponer el nombre mejor en vez del comentario.
+- **Eco** → borrar: repite el nombre de la función, variable, clase o método, o narra lo que la línea ya dice (`# incrementa el contador`). También es eco el ruido: código comentado (para eso está git), separadores sin nombre, `// fin del if`, autor y fecha, historial de cambios. Si el eco existe porque el nombre es malo, proponer el nombre mejor en vez del comentario.
 - **Mezcla** → reescribir: tiene algo invisible enterrado entre eco. Quedarse solo con lo invisible.
 - **Mentira** → corregir o borrar: contradice al código actual (desfasado, TODO ya resuelto, parámetro que ya no existe). Es peor que no tener comentario.
 - **Hueco** → agregar: salió del paso 2.
-- **Confuso** → partir: cuenta algo invisible pero pega ideas con `;` (ver *Cómo se escribe*).
+- **Confuso** → reescribir: cuenta algo invisible pero no se lee de corrido (ver *Cómo se escribe*).
+- **Sección** → proponer un archivo: un comentario que delimita una sección con nombre muestra que el archivo hace varias cosas. Recomendar refactorizar cada sección a su propio archivo.
+
+Ejemplos de **Mezcla**, donde lo que se va se puede leer en el código:
+
+```python
+# Antes
+"""IMDb ID que aparece en `texto` (ej. un link de imdb.com), o None."""
+# Después
+"""IMDb ID que aparece en `texto` (ej. un link de imdb.com)"""
+
+# Antes
+"""Baja el poster de OMDb a `destino` (de `destino_poster`); devuelve si se pudo. Corre fuera del hilo de la UI."""
+# Después
+"""Corre fuera del hilo de la UI."""
+
+# Antes
+"""Escribe los bytes `png` como captura en `posicion_ms` y devuelve la ruta. Crea `capturas/`
+si falta. Escribe a un temporal oculto y lo pasa al nombre final recién completo, así `listar`
+nunca ve un PNG a medias. Nunca pisa: si otra captura ocupa el nombre entre medio, prueba el
+siguiente. Lanza OSError."""
+# Después
+"""Pasa por un temporal oculto para que `listar` nunca vea un PNG a medias y lanza OSError."""
+```
+
+Ejemplos de **Sección**:
+
+```
+# --- escaneo ---
+// ==================== TOUCH ====================
+// ==================== WIFI ====================
+```
 
 ## Cómo se escribe
 
-Una idea por oración, sin `;`. El punto y coma pega dos ideas sin decir qué relación tienen, y el lector tiene que adivinar si la segunda es causa, consecuencia o algo aparte:
-
-- Si las ideas son independientes, cada una va en su oración, en su propia línea.
-- Si una depende de la otra, el conector dice la relación: *porque*, *así que*, *para que*, *pero*.
-
-Ideas independientes:
+Un comentario se lee **de corrido**, con la relación entre las ideas dicha en palabras y el sujeto a la vista. Los signos pegan ideas y dejan al lector adivinando qué cosa va con cuál, o si la segunda idea es causa, consecuencia o algo aparte. Por eso `:`, `;` y `,` se reemplazan por la palabra que dice la relación: *es*, *y*, *entonces*, *porque*, *para que*, *pero*, *primero… luego*.
 
 ```python
+# Antes
+# Importan QtMultimedia y requests, que son gran parte de la espera: van después de la ventana
+# Después
+# Gran parte de la espera es debido a importar QtMultimedia y requests por eso se importan después de abrir la ventana
+
+# Antes
+"""Abre la ventana con el spinner y, ya pintada, carga el resto."""
+# Después
+"""Primero abre la ventana con el spinner y luego carga el resto."""
+
+# Antes
+# Arrancó bien: si venía de actualizar, ya no hace falta la versión anterior
+# Después
+# Arrancó bien y si arrancó luego de actualizar entonces ya no es necesaria la versión anterior
+
+# Antes
+# Nombre que pone `ruta_libre`: `HH-MM-SS.ext` o `HH-MM-SS(n).ext`
+# Después
+# Nombre que pone `ruta_libre` es `HH-MM-SS.ext` o `HH-MM-SS(n).ext`
+
+# Antes
+"""Ruta para una captura en `posicion_ms`: `capturas/HH-MM-SS.png`, o `HH-MM-SS(n).png`
+con el primer n ≥ 2 libre. Nunca devuelve una que ya exista."""
+# Después
+"""La ruta para una captura en `posicion_ms` es `capturas/HH-MM-SS.png` o `HH-MM-SS(n).png` con el primer n ≥ 2 libre y nunca devuelve una que ya exista."""
+
+# Antes
+# Sistemas de archivos sin hard links (FAT, exFAT): rename sí pisa, así que se mira
+# antes. Solo queda la ventana entre mirar y renombrar.
+# Después
+# En sistemas de archivos sin hard links (FAT, exFAT) rename sí pisa entonces se mira antes para que solo quede la ventana entre mirar y renombrar.
+
+# Antes
+""""Alien 1979" o "Alien (1979)" -> ("Alien", 1979); sin año -> (texto, None)."""
+# Después
+""""Alien 1979" o "Alien (1979)" se retorna ("Alien", 1979) y sin año se retorna (texto, None)."""
+
+# Antes
+# Puede haber más de uno por bajadas a rutas viejas; sorted para que la elección no dependa del orden del set.
+# Después
+# Puede haber más de uno por bajadas a rutas viejas entonces se ordenan para que la elección no dependa del orden del set.
+```
+
+Un signo se queda solo cuando es lo que mejor se lee:
+
+- **`:`** antes de una lista de valores de ejemplo.
+- **`,`** entre los elementos de una lista de tres o más. Dos casos o dos hechos se unen con *o* / *y*, sin coma, y antes de un conector (*para que*, *entonces*) tampoco lleva.
+- **`.`** entre puntos realmente diferentes, que en una sola oración serían confusos. Cada uno va en su propia línea.
+
+```python
+# `:` con una lista de valores de ejemplo
+# Antes
+// Duración redondeada al minuto: "2 h 5 min", "2 h", "45 min"; vacío si no se conoce
+# Después
+// Duración redondeada al minuto: "2 h 5 min", "2 h", "45 min".
+
+# `,` en una lista de tres o más
+# Reintenta con timeout, error 500 o conexión cortada
+
+# Dos casos con "o" y dos hechos con "y", sin coma
+# Antes
+# Disco lleno a mitad de camino, o ya movido: no dejar el temporal
+# falla si existe; el temporal lo borra quien llama
+# Después
+# Disco lleno a mitad de camino o ya movido
+# Falla si ya existe y el temporal lo borra quien llama
+
+# `,` de más antes de un conector
+# Antes
+# antes que el puente, para que QML no lo lea ya destruido al cerrar
+# Después
+# antes que el puente para que QML no lo lea ya destruido al cerrar
+
+# `.` entre puntos diferentes
 # Antes
 # Es el único que decide qué póster se muestra; db.reasignar y la fusión solo mueven filas de posters.
 # Después
 # Es el único que decide qué póster se muestra.
 # db.reasignar y la fusión solo mueven filas de posters.
-```
-
-Ideas que dependen:
-
-```python
-# Antes
-# Puede haber más de uno por bajadas a rutas viejas; sorted para que la elección no dependa del orden del set.
-# Después
-# Puede haber más de uno por bajadas a rutas viejas, así que se ordenan para que la elección no dependa del orden del set.
 ```
 
 ## Lo invisible
