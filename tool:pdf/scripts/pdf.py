@@ -13,6 +13,12 @@ Un bloque `![epigrafe](diagrama.svg)` inserta un diagrama centrado en la pagina,
 relativa al archivo de entrada. En dos columnas interrumpe ambas: el texto anterior se reparte
 parejo arriba y el siguiente sigue debajo. Sin --color, un SVG con colores es un error.
 
+Un bloque de tabla (`| a | b |`, con `|---|---|` como segunda linea) ocupa todo el ancho, igual que
+un diagrama. Se corta entre filas, tras MIN_LINES filas o mas, y repite el encabezado en la pagina
+siguiente.
+
+Cada `## ` y `### ` lleva en el margen su numero de seccion (1, 1.1, ...), para poder citarla.
+
 Un bloque que no llega a mostrar MIN_LINES lineas empieza en la columna o pagina siguiente, y un
 titulo (o un parrafo todo en negrita) va pegado al comienzo de lo que le sigue. Si aun asi una
 pagina termina con un titulo o un bloque recien empezado, el script sale con error.
@@ -25,16 +31,19 @@ pagina termina con un titulo o un bloque recien empezado, el script sale con err
 import argparse, io, re
 from pathlib import Path
 
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, A5
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import BalancedColumns, BaseDocTemplate, Flowable, Frame, FrameBreak, NextPageTemplate, PageTemplate, Paragraph
+from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.platypus import BalancedColumns, BaseDocTemplate, Flowable, Frame, FrameBreak, NextPageTemplate, PageTemplate, Paragraph, Table
 from svglib.svglib import svg2rlg
 
 MARGIN, GUTTER, BODY, HEAD = 0.6 * inch, 0.3 * inch, 12, 14
 NEEDED = 72  # lo minimo que debe quedar en la pagina para empezar el texto siguiente
 MIN_LINES = 3  # lineas que un bloque cortado debe mostrar antes del corte
+REF_SIZE, REF_ALPHA, REF_GAP = 7, 0.45, 6  # numero de seccion en el margen
+CELL, CELL_PAD = BODY - 2, 5
 LAST_DRAWN = {}  # pagina -> ultimo elemento dibujado en ella
 
 
@@ -61,7 +70,27 @@ class Block(Paragraph):
 
 
 class Head(Block):
-    """Titulo o rotulo: va pegado a lo que le sigue."""
+    """Titulo o rotulo: va pegado a lo que le sigue. `ref` es su numero de seccion."""
+    ref = None
+
+    def draw(self):
+        if self.ref:
+            self.draw_ref()
+        super().draw()
+
+    def draw_ref(self):
+        """En el margen de la pagina mas cercano, sobre la linea base de la primera linea. Va antes
+        que el titulo para que al extraer el texto del PDF quede "2.1 Titulo"."""
+        c = self.canv
+        y = self.height - self.style.fontSize
+        c.saveState()
+        c.setFont("Helvetica", REF_SIZE)
+        c.setFillAlpha(REF_ALPHA)
+        if c.absolutePosition(0, 0)[0] > c._pagesize[0] / 2:
+            c.drawString(self.width + REF_GAP, y, self.ref)
+        else:
+            c.drawRightString(-REF_GAP, y, self.ref)
+        c.restoreState()
 
 
 class Kept(Flowable):
@@ -104,8 +133,10 @@ class Kept(Flowable):
         return [first, *parts[1:]]
 
     def draw(self):
+        # si lo que sigue se centra en la pagina, los titulos bajan con el
+        pad = getattr(self.next, "pad", 0)
         for head, y in self.layout(self.width)[0]:
-            head.drawOn(self.canv, 0, self.height - y)
+            head.drawOn(self.canv, 0, self.height - y - pad)
         self.next.drawOn(self.canv, 0, 0)
 
 
@@ -158,6 +189,7 @@ class Figures(Flowable):
     """Diagramas apilados que no se separan. Si lo que sigue no entra en el resto de la pagina,
     se centran en ese espacio."""
     GAP, AFTER = 6, 8
+    spaceBefore = spaceAfter = 10
 
     def __init__(self, figures, page_h):
         super().__init__()
@@ -198,8 +230,63 @@ class Figures(Flowable):
                 y -= self.AFTER
 
 
+class Grid(Table):
+    """Tabla de ancho completo. Cortada, muestra al menos MIN_LINES filas antes del corte."""
+
+    def split(self, aW, aH):
+        parts = super().split(aW, aH)
+        return parts if parts and parts[0]._nrows - 1 >= MIN_LINES else []
+
+    def draw(self):
+        LAST_DRAWN[self.canv.getPageNumber()] = self
+        super().draw()
+
+
+def table_rows(lines):
+    """Las filas de un bloque `| a | b |` sin la linea separadora, o None si no es una tabla."""
+    if len(lines) < 2 or "|" not in lines[0] or "|" not in lines[1]:
+        return None
+    if not re.fullmatch(r"\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?", lines[1]):
+        return None
+    rows = [[c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", l.strip("|"))] for l in lines[:1] + lines[2:]]
+    n = max(map(len, rows))
+    return [r + [""] * (n - len(r)) for r in rows]
+
+
+def col_widths(rows, total):
+    """Reparte todo el ancho segun el texto de cada columna, sin bajar de su palabra mas larga si se puede."""
+    def width(s):
+        return stringWidth(s, "Helvetica-Bold", CELL)
+
+    # el texto visible: de un link cuenta el rotulo, no la url
+    rows = [[re.sub(r"\[([^\]]+)\]\([^)\s]+\)", r"\1", c).replace("*", "") for c in row] for row in rows]
+    full = [max(width(c) for c in col) + 2 * CELL_PAD for col in zip(*rows)]
+    if sum(full) <= total:
+        return [w * total / sum(full) for w in full]
+    least = [max(width(w) for c in col for w in c.split() or [""]) + 2 * CELL_PAD for col in zip(*rows)]
+    spare = total - sum(least)
+    if spare <= 0:
+        return [w * total / sum(least) for w in least]
+    slack = sum(full) - sum(least)
+    return [m + spare * (f - m) / slack for m, f in zip(least, full)]
+
+
+def grid(rows, total, cell, head):
+    data = [[Paragraph(inline(c), head if i == 0 else cell) for c in row] for i, row in enumerate(rows)]
+    return Grid(data, colWidths=col_widths(rows, total), repeatRows=1, spaceBefore=16, spaceAfter=18, style=[
+        ("BACKGROUND", (0, 0), (-1, 0), "#e6e6e6"),
+        ("BACKGROUND", (0, 1), (-1, -1), "#ffffff"),
+        ("GRID", (0, 0), (-1, -1), 0.5, "#999999"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), CELL_PAD),
+        ("RIGHTPADDING", (0, 0), (-1, -1), CELL_PAD),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ])
+
+
 def bands(story, cols):
-    """Reparte el texto entre diagramas en columnas parejas; cada diagrama queda entre dos tramos."""
+    """Reparte el texto entre diagramas y tablas en columnas parejas; cada uno queda entre dos tramos."""
     out, text = [], []
 
     def flush():
@@ -208,7 +295,7 @@ def bands(story, cols):
             text.clear()
 
     for f in story:
-        if isinstance(f, Figures) or isinstance(f, Kept) and isinstance(f.next, Figures):
+        if isinstance(f, (Figures, Grid)) or isinstance(f, Kept) and isinstance(f.next, (Figures, Grid)):
             flush()
             out.append(f)
         else:
@@ -217,12 +304,23 @@ def bands(story, cols):
     return out
 
 
-def story_from(text, body, head, sub, quote, figure, page_h):
+def story_from(text, body, head, sub, quote, figure, table, page_h):
     title, story = None, []
+    section, subsection = 0, 0
+
+    def numbered(style, ref, line):
+        h = Head(inline(line), style)
+        h.ref = ref
+        return h
+
     for block in re.split(r"\n\s*\n", text.replace("\r", "").strip()):
         lines = [l.strip() for l in block.splitlines()]
         if all(re.match(r"[-*] ", l) for l in lines):
             story += [Block(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
+            continue
+        rows = table_rows(lines)
+        if rows:
+            story.append(table(rows))
             continue
         line = " ".join(lines)
         fig = re.fullmatch(r"!\[(.*?)\]\((.+)\)", line)
@@ -236,9 +334,11 @@ def story_from(text, body, head, sub, quote, figure, page_h):
         elif all(l.startswith(">") for l in lines):
             story.append(Block(inline(" ".join(l[1:].strip() for l in lines)), quote))
         elif line.startswith("### "):
-            story.append(Head(inline(line[4:]), sub))
+            subsection += 1
+            story.append(numbered(sub, f"{section}.{subsection}", line[4:]))
         elif line.startswith("## "):
-            story.append(Head(inline(line[3:]), head))
+            section, subsection = section + 1, 0
+            story.append(numbered(head, str(section), line[3:]))
         elif line.startswith("# ") and title is None and not story:
             title = Paragraph(inline(line[2:]), head)
         elif re.fullmatch(r"\*\*[^*]+\*\*", line):
@@ -261,15 +361,20 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     quote = ParagraphStyle("q", parent=body, leftIndent=12)
     caption = ParagraphStyle("c", parent=body, fontName="Helvetica-Oblique", fontSize=BODY - 2,
                              leading=(BODY - 2) * 1.2, alignment=TA_CENTER, spaceAfter=8)
+    cell = ParagraphStyle("td", fontName="Helvetica", fontSize=CELL, leading=CELL * 1.2, alignment=TA_LEFT)
+    cell_head = ParagraphStyle("th", parent=cell, fontName="Helvetica-Bold")
     W, H = pagesize
+
+    def table(rows):
+        return grid(rows, W - 2 * margin, cell, cell_head)
 
     def figure(caption_text, path):
         return diagram(base / path, caption_text, W - 2 * margin, (H - 2 * margin) * 0.6, color, caption)
 
-    title, story = story_from(text, body, head, sub, quote, figure, H - 2 * margin)
+    title, story = story_from(text, body, head, sub, quote, figure, table, H - 2 * margin)
     if story and isinstance(story[-1], Figures):
         story[-1].last = True
-    has_figures = any(isinstance(f, Figures) for f in story)
+    has_wide = any(isinstance(f, (Figures, Grid)) for f in story)
     story = keep_with_next(story)
     col_w = (W - 2 * margin - GUTTER * (cols - 1)) / cols
 
@@ -281,7 +386,7 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
         canvas.drawCentredString(W / 2, margin / 2, str(doc.page))
 
     templates = [PageTemplate(id="rest", frames=columns(H - margin), onPage=page_number)]
-    if cols > 1 and has_figures:
+    if cols > 1 and has_wide:
         templates = [PageTemplate(id="bands", frames=[Frame(margin, margin, W - 2 * margin, H - 2 * margin, 0, 0, 0, 0, id="full")], onPage=page_number)]
         story = ([title] if title else []) + bands(story, cols)
     elif title:

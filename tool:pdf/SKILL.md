@@ -1,6 +1,6 @@
 ---
 name: tool:pdf
-description: Convierte un archivo de texto en PDF, en dos columnas justificado (por defecto), una columna, o cuadernillo para imprimir, con diagramas si hacen falta. Usar cuando el usuario pida pasar un texto a PDF o sumarle un diagrama.
+description: Convierte un archivo de texto en PDF, en dos columnas justificado (por defecto), una columna, o cuadernillo para imprimir, con tablas y diagramas si hacen falta. Usar cuando el usuario pida pasar un texto a PDF o sumarle un diagrama.
 ---
 
 # Texto a PDF
@@ -17,7 +17,13 @@ uv run ~/.claude/skills/tool:pdf/scripts/pdf.py <entrada.txt> [-f columnas|simpl
 
 La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
 
+Cada `## ` y `### ` lleva su número de sección (`1`, `1.1`), chico y tenue en el margen a la altura del título, para poder citarla ("explicame 2.1 del PDF"). En `columnas`, los títulos de la columna derecha lo llevan en el margen derecho. Para ubicar una sección en el texto del PDF, usar `pdftotext -layout`, que deja el número en la misma línea que el título.
+
 Cada bloque cortado muestra al menos 3 líneas antes del corte; si no llega, empieza en la columna o página siguiente y deja ese espacio en blanco. Un título, o un párrafo todo en negrita como `**[ESTUDIAR]**`, va pegado al comienzo de lo que le sigue. El script lo valida: si una página igual termina con un título o un bloque recién empezado, sale con error nombrando la página y el texto, y ese PDF no se entrega.
+
+## Tablas
+
+Un bloque `| a | b |` con `|---|---|` como segunda línea es una tabla: ocupa todo el ancho de la página (en `columnas` corta las dos columnas, como un diagrama), con el encabezado en gris claro y las filas en blanco. Una tabla larga se corta entre filas, con al menos 3 antes del corte, y repite el encabezado en la página siguiente.
 
 ## Diagramas
 
