@@ -28,6 +28,8 @@ Se consultan en todo roadmap de desarrollo de software, junto con las fuentes qu
 
 [DevCaress/guia-entrevistas-de-programacion](https://github.com/DevCaress/guia-entrevistas-de-programacion): guía de entrevistas de programación en español.
 
+[bregman-arie/devops-exercises](https://github.com/bregman-arie/devops-exercises): preguntas y ejercicios de DevOps e infraestructura (Linux, redes, Git, Docker, Kubernetes, CI/CD, cloud, Terraform, Ansible, bases de datos); sirve para chequear qué conceptos de operación toca el caso.
+
 ## Lenguajes y plataformas
 
 [goldbergyoni/nodebestpractices](https://github.com/goldbergyoni/nodebestpractices): buenas prácticas de Node.js (estructura, errores, seguridad, testing, producción).
