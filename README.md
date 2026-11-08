@@ -18,7 +18,7 @@ Doce skills en español, cada una con sus pasos y su criterio de terminado, para
 |---|---|
 | `tool:a3` | **(En etapa de prueba)** Escribe un A3 al estilo Toyota: el problema, su causa, la contramedida, el plan y el seguimiento en una página, como alternativa corta a un spec. |
 | `tool:audit-tests` | **(En etapa de prueba)** Audita tests con mutantes y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
-| `tool:diagrama-hardware` | Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG con schemdraw. Copia de `schemdraw-circuit-generator` de takazudo/claude-resources. |
+| `tool:diagrama-hardware` | Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG con schemdraw. Basada en `schemdraw-circuit-generator` de takazudo/claude-resources. |
 | `tool:doc-estudio` | Escribe un `.md` que enseña un tema desde lo básico hasta la profundidad, con código verificado, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
