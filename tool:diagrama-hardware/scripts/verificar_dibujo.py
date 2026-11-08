@@ -7,6 +7,8 @@ Uso, al final del script del circuito:
     verificar(d, {R1: 'R1', D1: 'D1', V1: 'V1', vdd: '=vcc'}, 'circuito.cir')
 
 `nombres` mapea cada componente del dibujo a su designador en la netlist.
+Lo decorativo (una antena, un cable dibujado como dibujo) va con None y no se revisa;
+un componente que no está en el dict es un error.
 Los símbolos de alimentación (Vdd, Vss, etiquetas) van con '=nodo'. Las tierras
 (Ground*) no hace falta nombrarlas: son el nodo 0.
 
@@ -92,7 +94,7 @@ def _anchor_real(e, anchor):
     return positivo_en if anchor in ('anodo', 'mas') else negativo_en
 
 
-def _nets(d):
+def _nets(elementos):
     """Une por coincidencia de anchors: extremos de cable, uniones en T y pines."""
     padre = {}
 
@@ -103,7 +105,7 @@ def _nets(d):
             a = padre[a]
         return a
 
-    cables = [e for e in d.elements if isinstance(e, CABLES)]
+    cables = [e for e in elementos if isinstance(e, CABLES)]
     puntas = {}
     for c in cables:
         s, t = _punto(c.absanchors['start']), _punto(c.absanchors['end'])
@@ -112,7 +114,7 @@ def _nets(d):
             puntas[s] = puntas.get(s, 0) + 1
             puntas[t] = puntas.get(t, 0) + 1
     pines = set()
-    for e in d.elements:
+    for e in elementos:
         if not isinstance(e, CABLES):
             for nombre, p in e.absanchors.items():
                 pines.add(_punto(p))
@@ -140,8 +142,13 @@ def _nets(d):
 
 def verificar(d, nombres, netlist):
     esperado = _leer_netlist(netlist)
-    raiz, unir, sueltas = _nets(d)
+    # lo que se mapea a None es decorativo (antena, cable dibujado como dibujo): no entra al chequeo
+    elementos = [e for e in d.elements if not (e in nombres and nombres[e] is None)]
+    raiz, unir, sueltas = _nets(elementos)
     errores = []
+    for e in elementos:
+        if not isinstance(e, CABLES + SIMBOLOS) and e not in nombres:
+            errores.append(f'{type(e).__name__} dibujado sin designador: agregalo al dict, o mapealo a None si es decorativo')
     nodo_de_net, net_de_nodo = {}, {}
 
     def asignar(etiqueta, punto, nodo):
@@ -157,7 +164,7 @@ def verificar(d, nombres, netlist):
 
     # 1) símbolos de alimentación y tierra: los que nombran el mismo nodo son la misma net
     simbolos = []
-    for e in d.elements:
+    for e in elementos:
         if isinstance(e, SIMBOLOS):
             nombre = nombres.get(e, '=0' if isinstance(e, TIERRAS) else None)
             if not nombre or not nombre.startswith('='):
@@ -171,7 +178,7 @@ def verificar(d, nombres, netlist):
         asignar(f'símbolo de {nodo}', p, nodo)
 
     # 2) componentes: primero los de una sola orientación, después R/C/L
-    por_designador = {v: e for e, v in nombres.items() if not v.startswith('=')}
+    por_designador = {v: e for e, v in nombres.items() if v and not v.startswith('=')}
     for des in set(por_designador) - set(esperado):
         errores.append(f'{des} está en el dibujo pero no en la netlist')
     for des in set(esperado) - set(por_designador):

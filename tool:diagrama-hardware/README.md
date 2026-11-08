@@ -2,7 +2,7 @@
 
 Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG (o PNG/PDF) con la librería de Python [schemdraw](https://schemdraw.readthedocs.io/). Claude escribe un script `.py` que describe el circuito y lo corre para obtener la imagen.
 
-Es una copia de `schemdraw-circuit-generator`, de [takazudo/claude-resources](https://github.com/takazudo/claude-resources) (licencia MIT), con las correcciones que se listan en [Cambios respecto de la original](#cambios-respecto-de-la-original).
+Está basada en `schemdraw-circuit-generator`, de [takazudo/claude-resources](https://github.com/takazudo/claude-resources) (licencia MIT), con los cambios que se listan en [Cambios respecto de la original](#cambios-respecto-de-la-original).
 
 ## Requisitos
 
@@ -11,6 +11,8 @@ Es una copia de `schemdraw-circuit-generator`, de [takazudo/claude-resources](ht
   ```bash
   uv run --no-project --with schemdraw --with matplotlib python diagrama.py
   ```
+
+- `ngspice` para simular el circuito (`sudo apt install ngspice`). Si falta, la skill pregunta antes de instalarlo y, si no se instala, valida solo el dibujo.
 
 ## Ejemplos de salida
 
@@ -36,7 +38,7 @@ Conexionado de una caja con fuente, ESP32-S3, la llave y un USB-A. Usa bloques `
 
 ## Limitaciones y advertencias
 
-- **No valida el circuito.** Dibuja lo que dice el script: si una conexión está mal, el diagrama sale mal sin ningún error. Hay que comparar cada conexión con la fuente (datasheet, documento de hardware).
+- **La validación cubre lo que dice la netlist.** `verificar_dibujo.py` confirma que el dibujo coincide con `circuito.cir`, y `simular.py` que el circuito da los valores esperados. Si la netlist misma está mal (un pin equivocado según el datasheet), los dos pasan: hay que comparar la netlist con la fuente. La simulación tampoco cubre partes sin modelo SPICE (un microcontrolador), límites de potencia ni lo que no tenga un rango `*?`.
 - **Cada diagrama hay que mirarlo.** Que el script corra sin errores no significa que el dibujo esté bien. Hay que renderizar un PNG, mirarlo y corregir hasta que esté limpio. Los errores más comunes son:
   - componentes rotados;
   - rótulos pisados;
@@ -48,11 +50,16 @@ Conexionado de una caja con fuente, ESP32-S3, la llave y un USB-A. Usa bloques `
 - **Partes heredadas de la original:**
   - `SKILL.md` está en inglés y es largo (unas 800 líneas).
   - Menciona Context7 y capturas con un navegador headless, que pueden no estar disponibles.
-  - El autor la marcó como *deprecated* y la sacó de su repo; esta copia sale del commit anterior a ese.
+  - El autor la marcó como *deprecated* y la sacó de su repo; esta versión parte del commit anterior a ese.
 
 ## Cambios respecto de la original
 
 - `name:` del frontmatter cambiado a `tool:diagrama-hardware`.
+- Validación del circuito, que la original no tenía (la investigación está en [`investigacion.md`](investigacion.md)):
+  - El Paso A escribe la lista de conexiones como netlist SPICE (`circuito.cir`) con 1 a 3 rangos esperados.
+  - `scripts/verificar_dibujo.py` reconstruye las conexiones del dibujo desde las posiciones de los pines y las compara con la netlist: pines en el nodo equivocado, pines sueltos, diodos y fuentes al revés, cables que no llegan a nada.
+  - `scripts/simular.py` corre `ngspice -b` y falla ante nodos flotantes o valores fuera de rango, aunque ngspice termine sin error.
+  - La skill no instala nada sin preguntar.
 - `SKILL.md`, tres arreglos de redacción para que el agente siga siempre el mismo camino:
   - El flujo incremental y el de todo de una vez estaban completos uno al lado del otro, y el incremental aparecía dos veces. Ahora el inicio tiene solo los pasos comunes y una regla para elegir: todo de una vez solo con menos de 5 componentes y si el usuario lo pide. Ese flujo pasó a `references/all-at-once.md`.
   - Se sacaron los ejemplos de código marcados como incorrectos (❌ WRONG) y la anécdota del `loc='left'`. Queda solo la forma correcta, porque mostrarle al agente el código malo lo vuelve más probable.
