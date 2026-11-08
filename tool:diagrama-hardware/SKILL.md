@@ -11,12 +11,14 @@ Generate professional, publication-quality circuit diagrams using schemdraw Pyth
 
 Every diagram follows the same skeleton:
 
-1. **Connection list** (Step A) - every pin-to-pin connection, written before any code. It is the spec.
+1. **Connection list** (Step A) - every connection written as a SPICE netlist (`circuito.cir`) with 1–3 expected value ranges, before any code. It is the spec.
 2. **Build** - pick one path:
    - **Incremental** (default): add one component or connection per iteration, render, show the user, wait for approval, repeat. Steps B–D below.
    - **All at once**: only when the circuit has fewer than 5 components *and* the user asked for the whole diagram in one go. Follow [`references/all-at-once.md`](references/all-at-once.md) instead of Steps B–D.
-3. **Final verification** (Step E) - trace every connection from the list on the final screenshot; the user approves.
-4. **Deliver** (Step F) - connection list, SVG, Python code, screenshot.
+3. **Final verification** (Step E) - two scripts first: the drawing matches the netlist, and the netlist simulates in range. Then the screenshot review; the user approves.
+4. **Deliver** (Step F) - netlist, script results, SVG, Python code, screenshot.
+
+**Never install anything without asking.** If `schemdraw`, `ngspice` or any other dependency is missing, tell the user what is missing and the command that would install it, and wait for their OK.
 
 ## Visual Verification Checklist (MANDATORY)
 
@@ -139,6 +141,8 @@ A diagram is complete ONLY when:
 
 - ✅ Code executes without errors
 - ✅ SVG generates successfully
+- ✅ `verificar_dibujo.py` passes: the drawing matches `circuito.cir`
+- ✅ `simular.py` passes, or the user agreed to skip it (see Step E)
 - ✅ **USER has visually reviewed screenshot and approved** (MOST IMPORTANT)
 - ✅ **USER confirms all connections are traceable**
 - ✅ **USER confirms no visual issues** (overlaps, spacing, clarity)
@@ -245,8 +249,11 @@ mcp__context7__get-library-docs(
 
 ## Installation
 
+Ask the user before installing anything.
+
 ```bash
-pip install schemdraw
+pip install schemdraw          # drawing
+sudo apt install ngspice       # simulation in Step E (scripts/simular.py)
 ```
 
 **Dependencies**: numpy, pillow (for PNG export), matplotlib (optional backend)
@@ -320,25 +327,31 @@ elm.Capacitor().label(('−', '$V_o$', '+'))  # Multiple (polarity)
 
 **CRITICAL**: Start with explicit connection list, not the diagram.
 
-Write every connection showing which pin connects to which:
+Write it as a SPICE netlist, `circuito.cir`, next to the circuit script. Use the same designators as the drawing labels (`R1`, `D1`…), name every node, and use `0` for ground. Show it to the user before drawing.
 
-```
-Connections:
-- +15V input → U2 (LM2596S) pin 5 (VIN)
-- +15V input → C5 (100µF) → GND
-- U2 pin 3 (ON) → +15V (always enabled)
-- U2 pin 4 (VOUT) → Switching node
-- Switching node → L1 (100µH) → +13.5V Output
-- Switching node → D1 (SS34 cathode)
-- D1 (SS34 anode) → GND
-- +13.5V → C3 (470µF) → GND
-- U2 pin 2 (FB) → R1 (10kΩ) → Tap
-- Tap → R2 (1kΩ) → GND
-- Tap → +13.5V (feedback sense)
-- U2 pin 1 (GND) → GND
+```spice
+* LED con resistencia            <- line 1 is always the title, SPICE ignores it
+V1 vcc 0 DC 5                    ; V: n+ n-
+R1 vcc a 330                     ; R C L: two nodes, any order
+D1 a 0 DLED                      ; D: anode cathode
+.model DLED D(IS=1e-20 N=1.8 RS=5)
+*? v(a) 1.8 2.2                  ; expected range: LED forward voltage
+*? i(v1) -0.02 -0.005            ; LED current 5–20 mA (source current is negative)
+.control
+op
+print v(a) i(v1)
+.endc
+.end
 ```
 
-This list serves as the specification. The diagram must satisfy EVERY connection.
+Rules:
+
+- **Line types the checker reads:** `R C L` (C with `polar=True`: first node is +), `D` anode cathode, `V I` n+ n-, `Q` collector base emitter, `M J` drain gate source, and `*@ U1.PIN node` for ICs and opamps (`PIN` is the schemdraw anchor name: `VIN`, `in1`, `out`…).
+- **Model-only lines** (`X E F G H B`, or any line containing `solo-sim`) are simulated but not looked for in the drawing. An opamp is drawn as `elm.Opamp` with `*@` lines, and simulated as `E1 out 0 inp inn 1e5 ; solo-sim`.
+- **Expected ranges (`*?`)**: write 1–3 that prove the circuit does its job: LED current, divider output, amplifier gain, RC time constant (`meas tran t63 when v(out)=3.16 rise=1`). Each name must be printed by a `print` or `meas` in the `.control` block. Derive each range from the design intent, not from a first simulation run.
+- **Parts without a SPICE model** (a microcontroller, a 555 without a vendor model): keep their pins as `*@` lines so the drawing is still checked, and tell the user the simulation can't cover that part.
+
+This netlist is the specification. The drawing must match EVERY line.
 
 ### Step B: Incremental Build - Start with Foundation
 
@@ -454,21 +467,33 @@ After EACH iteration:
 
 ### Step E: Final Verification
 
-Once all components added and user confirms diagram looks complete:
+Once all components added and user confirms diagram looks complete, run the two checks **before** the final screenshot. The scripts are in `scripts/` inside this skill's base directory.
 
-1. **Visual check:** Generate final screenshot
-2. **Connection trace:** Verify each connection from Step A list is present
-3. **Component verification:** Check all values, labels, pin numbers
-4. **User approval:** Get final confirmation
+1. **Drawing matches the netlist.** Keep each component in a variable and end the circuit script with:
+
+   ```python
+   import sys; sys.path.insert(0, '<skill base dir>/scripts')
+   from verificar_dibujo import verificar
+   verificar(d, {V1: 'V1', R1: 'R1', D1: 'D1', U1: 'U1', vdd: '=vcc'}, 'circuito.cir')
+   ```
+
+   The dict maps each drawn component to its netlist designator; supply symbols (`Vdd`, `Vss`) map to `'=node'`, grounds need no entry. It rebuilds the nets from the anchor positions (T-junctions on a long ground line included) and exits with code 1 on a pin in the wrong node, a pin cut off from its node, a diode or source drawn backwards (`.reverse()` included), a component missing on either side, or a wire end that touches nothing. Fix the drawing, not the netlist, unless the netlist is the one that's wrong.
+2. **Netlist works electrically.** `python3 scripts/simular.py circuito.cir` runs `ngspice -b` and exits with code 1 if ngspice reports anything suspicious (singular matrix, floating node, failed convergence), if a `*?` value is missing, or if one is out of range. ngspice exits with 0 even for a floating node; the script catches what the exit code misses. If `ngspice` is not installed, ask the user before installing it; if they decline, say the circuit was only checked structurally.
+3. **Visual check:** Generate final screenshot and review it with the Visual Verification Checklist. The scripts already proved the connections; the screenshot is for what only shows visually (labels, spacing, clarity).
+4. **Component verification:** Check all values, labels, pin numbers against the netlist
+5. **User approval:** Get final confirmation
+
+What the checks don't cover: whatever has no `*?` range, parts without a model, power ratings, and whether the circuit is the right one for the job. Say so when it applies.
 
 ### Step F: Deliver
 
 Provide to user:
 
-1. **Connection list** (from Step A)
-2. **Final SVG diagram** (verified version)
-3. **Python code** (for reproducibility)
-4. **Screenshot** (for documentation)
+1. **Netlist** (`circuito.cir`, from Step A)
+2. **Check results** (output of both scripts, or which one was skipped and why)
+3. **Final SVG diagram** (verified version)
+4. **Python code** (for reproducibility)
+5. **Screenshot** (for documentation)
 
 ## Common Patterns
 

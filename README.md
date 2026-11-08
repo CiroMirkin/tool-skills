@@ -44,7 +44,7 @@ Los enlaces hacen que un `git pull` actualice las skills. Para instalar solo una
 
 Algunas skills necesitan algo más:
 
-- **`tool:diagrama-hardware`**: Python 3 con `schemdraw` y `matplotlib`. Con [uv](https://docs.astral.sh/uv/) alcanza con `uv run --no-project --with schemdraw --with matplotlib python script.py`.
+- **`tool:diagrama-hardware`**: Python 3 con `schemdraw` y `matplotlib`. Con [uv](https://docs.astral.sh/uv/) alcanza con `uv run --no-project --with schemdraw --with matplotlib python script.py`. Para simular el circuito usa `ngspice` (`sudo apt install ngspice`); si falta, la skill pregunta antes de instalarlo.
 - **`tool:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
