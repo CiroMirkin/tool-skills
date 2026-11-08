@@ -349,6 +349,7 @@ Rules:
 - **Line types the checker reads:** `R C L` (C with `polar=True`: first node is +), `D` anode cathode, `V I` n+ n-, `Q` collector base emitter, `M J` drain gate source, and `*@ U1.PIN node` for ICs and opamps (`PIN` is the schemdraw anchor name: `VIN`, `in1`, `out`…).
 - **Model-only lines** (`X E F G H B`, or any line containing `solo-sim`) are simulated but not looked for in the drawing. An opamp is drawn as `elm.Opamp` with `*@` lines, and simulated as `E1 out 0 inp inn 1e5 ; solo-sim`.
 - **Expected ranges (`*?`)**: write 1–3 that prove the circuit does its job: LED current, divider output, amplifier gain, RC time constant (`meas tran t63 when v(out)=3.16 rise=1`). Each name must be printed by a `print` or `meas` in the `.control` block. Derive each range from the design intent, not from a first simulation run.
+- **MOSFETs: add the body diode.** A generic `PMOS`/`NMOS` model has none, so a MOSFET with drain and source swapped still simulates fine. Add it as a model-only line: anode on the drain for a P-MOSFET (`DB1 drain source DBODY ; solo-sim`), anode on the source for an N-MOSFET (`DB1 source drain DBODY ; solo-sim`), with `.model DBODY D(IS=1e-12 N=1.2)`. Then a swapped MOSFET leaks through the diode and an "off" range catches it.
 - **Parts without a SPICE model** (a microcontroller, a 555 without a vendor model): keep their pins as `*@` lines so the drawing is still checked, and tell the user the simulation can't cover that part.
 
 This netlist is the specification. The drawing must match EVERY line.
