@@ -38,6 +38,10 @@ Se consultan en todo roadmap de desarrollo de software, junto con las fuentes qu
 
 [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch): ingeniería de IA de punta a punta (LLMs, RAG, agentes, despliegue).
 
+## Apuntes de diseño y proceso
+
+[CiroMirkin/apuntes](https://github.com/CiroMirkin/apuntes): apuntes teóricos en español, uno por tema (SOLID, GRASP, cohesión y acoplamiento, patrones como MVC, repositorio y value object, arquitectura por capas y C4, TDD/BDD, refactorización, Big O, normalización, Kanban, historias de usuario); dan una idea clara de cada concepto para enlazar como punto de partida.
+
 ## Libros
 
 [mouredev/free-programming-books](https://github.com/mouredev/free-programming-books): índice de libros de programación gratuitos, por lenguaje y tema.
