@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["reportlab", "pypdf", "svglib"]
+# dependencies = ["reportlab", "pypdf", "svglib", "pyphen"]
 # ///
 """Convierte un archivo de texto en PDF.
 
@@ -354,7 +354,7 @@ def frame(x, y, w, h):
 
 def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     body = ParagraphStyle("b", fontName="Helvetica", fontSize=BODY, leading=BODY * 1.125,
-                          alignment=TA_JUSTIFY, spaceAfter=5)
+                          alignment=TA_JUSTIFY, spaceAfter=5, hyphenationLang="es_ES")
     head = ParagraphStyle("h", fontName="Helvetica-Bold", fontSize=HEAD, leading=HEAD * 1.14,
                           spaceBefore=2, spaceAfter=5)
     sub = ParagraphStyle("s", parent=head, fontSize=BODY, leading=BODY * 1.2)
