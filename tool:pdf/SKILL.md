@@ -1,6 +1,6 @@
 ---
 name: tool:pdf
-description: Convierte un archivo de texto en PDF, en dos columnas justificado (por defecto), una columna, o cuadernillo para imprimir, con tablas y diagramas si hacen falta. Usar cuando el usuario pida pasar un texto a PDF o sumarle un diagrama.
+description: Convierte un archivo de texto en PDF, en dos columnas justificado (por defecto), una columna, o cuadernillo para imprimir, con tablas, código y diagramas si hacen falta. Usar cuando el usuario pida pasar un texto a PDF o sumarle un diagrama.
 ---
 
 # Texto a PDF
@@ -15,11 +15,17 @@ uv run ~/.claude/skills/tool:pdf/scripts/pdf.py <entrada.txt> [-f columnas|simpl
 - `simple`: A4, una columna.
 - `cuadernillo` (booklet): páginas A5 de a dos por hoja A4 apaisada, reordenadas para que al imprimir doble faz y doblar al medio queden en orden. Al entregarlo, decirle al usuario que imprima doble faz **volteando por el borde corto**.
 
-La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
+La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*`, `` `código` `` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
 
 Cada `## ` y `### ` lleva su número de sección (`1`, `1.1`), chico y tenue en el margen a la altura del título, para poder citarla ("explicame 2.1 del PDF"). En `columnas`, los títulos de la columna derecha lo llevan en el margen derecho. Para ubicar una sección en el texto del PDF, usar `pdftotext -layout`, que deja el número en la misma línea que el título.
 
 Cada bloque cortado muestra al menos 3 líneas antes del corte; si no llega, empieza en la columna o página siguiente y deja ese espacio en blanco. Un título, o un párrafo todo en negrita como `**[ESTUDIAR]**`, va pegado al comienzo de lo que le sigue. El script lo valida: si una página igual termina con un título o un bloque recién empezado, sale con error nombrando la página y el texto, y ese PDF no se entrega.
+
+## Código
+
+Un bloque ```` ```lenguaje rótulo ```` … ```` ``` ```` es código: monoespaciado, con los saltos de línea y las líneas en blanco tal cual, y resaltado en grises: palabras clave en negrita, comentarios en itálica y gris oscuro, y textos entre comillas en gris oscuro. El rótulo, opcional (ej. el nombre del archivo), va en una franja gris arriba y se repite con "(sigue)" si el bloque se corta. En `columnas`, un bloque con alguna línea que no entra en la columna ocupa todo el ancho, como una tabla; las que no entran ni así siguen en la línea de abajo, sangradas. El `` `código` `` suelto dentro del texto va en monoespaciada.
+
+**Blanco y negro** por defecto, para imprimir. **Color** en el resaltado únicamente si el usuario lo pide, con `--color`, la misma opción que habilita diagramas a color.
 
 ## Tablas
 

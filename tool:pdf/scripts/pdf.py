@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["reportlab", "pypdf", "svglib"]
+# dependencies = ["reportlab", "pypdf", "svglib", "pygments"]
 # ///
 """Convierte un archivo de texto en PDF.
 
@@ -7,7 +7,14 @@
 
 Texto de entrada: `# ` titulo, `## ` seccion, `### ` subseccion, parrafos separados por una
 linea en blanco, bloques de `- ` vinetas, bloques de `> ` cita (sangrados), y `**negrita**`,
-`*italica*` y `[texto](url)` dentro del texto. El resto se copia tal cual.
+`*italica*`, `[texto](url)` y `codigo` dentro del texto. El resto se copia tal cual.
+
+Un bloque ```lenguaje [rotulo] ... ``` es codigo: monoespaciado, con los saltos de linea tal cual
+y resaltado en grises (palabras clave en negrita; comentarios en italica y gris oscuro, igual
+que los textos entre comillas). El rotulo, si
+esta, va en una franja arriba. Con --color el resaltado lleva ademas colores. En dos columnas, un
+bloque con alguna linea que no entra en la columna ocupa todo el ancho, como una tabla; las lineas
+que no entran ni asi siguen abajo, sangradas. Se corta entre lineas, tras MIN_LINES o mas.
 
 Un bloque `![epigrafe](diagrama.svg)` inserta un diagrama centrado en la pagina, con la ruta
 relativa al archivo de entrada. En dos columnas interrumpe ambas: el texto anterior se reparte
@@ -44,6 +51,8 @@ NEEDED = 72  # lo minimo que debe quedar en la pagina para empezar el texto sigu
 MIN_LINES = 3  # lineas que un bloque cortado debe mostrar antes del corte
 REF_SIZE, REF_ALPHA, REF_GAP = 7, 0.45, 6  # numero de seccion en el margen
 CELL, CELL_PAD = BODY - 2, 5
+CODE, CODE_LEADING, CODE_PAD, LABEL = 8.5, 10.5, 5, 7.5
+CODE_GRAY = "#555555"  # comentarios y textos entre comillas, sin --color
 LAST_DRAWN = {}  # pagina -> ultimo elemento dibujado en ella
 
 
@@ -51,13 +60,29 @@ LAST_DRAWN = {}  # pagina -> ultimo elemento dibujado en ella
 MISSING = {"→": "->", "←": "<-", "≥": ">=", "≤": "<=", "≠": "!="}
 
 
-def inline(s):
+def plain(s):
     for c, r in MISSING.items():
         s = s.replace(c, r)
-    s = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return s
+
+
+def escape(s):
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def inline(s):
+    # el codigo se aparta antes, para que sus * y [] queden literales
+    codes = []
+
+    def keep(m):
+        codes.append(m.group(1))
+        return f"\x00{len(codes) - 1}\x00"
+
+    s = escape(plain(re.sub(r"`([^`]+)`", keep, s)))
     s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2" color="#1a5fb4">\1</a>', s)
     s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
-    return re.sub(r"\*(.+?)\*", r"<i>\1</i>", s)
+    s = re.sub(r"\*(.+?)\*", r"<i>\1</i>", s)
+    return re.sub(r"\x00(\d+)\x00", lambda m: f'<font face="Courier">{escape(plain(codes[int(m.group(1))]))}</font>', s)
 
 
 class Block(Paragraph):
@@ -230,6 +255,135 @@ class Figures(Flowable):
                 y -= self.AFTER
 
 
+COURIER = {(False, False): "Courier", (True, False): "Courier-Bold",
+           (False, True): "Courier-Oblique", (True, True): "Courier-BoldOblique"}
+
+
+def highlight(source, lang, color):
+    """Las lineas del codigo como listas de (texto, fuente, color)."""
+    from pygments.lexers import TextLexer, get_lexer_by_name
+    from pygments.styles import get_style_by_name
+    from pygments.token import Comment, String
+    from pygments.util import ClassNotFound
+    try:
+        lexer = get_lexer_by_name(lang or "text")
+    except ClassNotFound:
+        lexer = TextLexer()
+    style = get_style_by_name("default")
+    lines = [[]]
+    for ttype, text in lexer.get_tokens(plain(source.expandtabs(4))):
+        st = style.style_for_token(ttype)
+        font = COURIER[bool(st["bold"]), bool(st["italic"])]
+        if color:
+            ink = "#" + st["color"] if st["color"] else "#000000"
+        else:
+            ink = CODE_GRAY if ttype in Comment or ttype in String else "#000000"
+        for i, part in enumerate(text.split("\n")):
+            if i:
+                lines.append([])
+            if part:
+                lines[-1].append((part, font, ink))
+    while lines and not lines[-1]:
+        lines.pop()
+    return lines
+
+
+def longest(lines):
+    return max((sum(len(t) for t, _, _ in l) for l in lines), default=0)
+
+
+def code_chars(width):
+    return int((width - 2 * CODE_PAD) / stringWidth("x", "Courier", CODE))
+
+
+class Code(Flowable):
+    """Bloque de codigo. Las lineas que no entran siguen abajo, sangradas."""
+    spaceBefore, spaceAfter = 6, 9
+
+    def __init__(self, lines, label, wide=False):
+        super().__init__()
+        self.lines, self.label, self.wide = lines, label, wide
+
+    def visual(self, width):
+        n, out = code_chars(width), []
+        for line in self.lines:
+            text = "".join(t for t, _, _ in line)
+            indent = " " * min(len(text) - len(text.lstrip(" ")) + 2, n // 2)
+            row, used = [], 0
+            for t, font, ink in line:
+                while t:
+                    if used == n:
+                        out.append(row)
+                        row, used = [(indent, "Courier", "#000000")], len(indent)
+                    take = t[:n - used]
+                    row.append((take, font, ink))
+                    used += len(take)
+                    t = t[len(take):]
+            out.append(row)
+        return out
+
+    def label_h(self):
+        return LABEL + 6 if self.label else 0
+
+    def wrap(self, aW, aH):
+        self.width, self.rows = aW, self.visual(aW)
+        self.height = len(self.rows) * CODE_LEADING + 2 * CODE_PAD + self.label_h()
+        return aW, self.height
+
+    def split(self, aW, aH):
+        rows = self.visual(aW)
+        n = int((aH - 2 * CODE_PAD - self.label_h()) / CODE_LEADING)
+        if n < MIN_LINES or n >= len(rows):
+            return []
+        rest = re.sub(r"( \(sigue\))?$", " (sigue)", self.label, count=1) if self.label else None
+        return [Code(rows[:n], self.label, self.wide), Code(rows[n:], rest, self.wide)]
+
+    def draw(self):
+        LAST_DRAWN[self.canv.getPageNumber()] = self
+        c, top = self.canv, self.height
+        c.saveState()
+        c.setLineWidth(0.5)
+        c.setStrokeColor("#999999")
+        if self.label:
+            top -= self.label_h()
+            c.setFillColor("#e6e6e6")
+            c.rect(0, top, self.width, self.label_h(), stroke=0, fill=1)
+            c.setFillColor("#000000")
+            c.setFont("Helvetica", LABEL)
+            c.drawString(CODE_PAD, top + 3.5, plain(self.label))
+        c.rect(0, 0, self.width, self.height, stroke=1, fill=0)
+        y = top - CODE_PAD - CODE
+        for row in self.rows:
+            x = CODE_PAD
+            for t, font, ink in row:
+                c.setFont(font, CODE)
+                c.setFillColor(ink)
+                c.drawString(x, y, t)
+                x += stringWidth(t, font, CODE)
+            y -= CODE_LEADING
+        c.restoreState()
+
+
+def fences(text):
+    """Saca los bloques ``` del texto (pueden tener lineas en blanco) y deja en su lugar \x01n\x01."""
+    out, blocks, cur = [], [], None
+    for line in text.replace("\r", "").split("\n"):
+        if cur is None and line.lstrip().startswith("```"):
+            info = line.strip()[3:].split(None, 1)
+            cur = (info[0] if info else "", info[1] if len(info) > 1 else None, [])
+        elif cur is not None and line.strip().startswith("```"):
+            blocks.append((cur[0], cur[1], "\n".join(cur[2])))
+            out += ["", f"\x01{len(blocks) - 1}\x01", ""]
+            cur = None
+        elif cur is not None:
+            cur[2].append(line)
+        else:
+            out.append(line)
+    if cur is not None:
+        raise SystemExit(f"bloque de codigo sin cerrar: ```{cur[0]}")
+    return "\n".join(out), blocks
+
+
 class Grid(Table):
     """Tabla de ancho completo. Cortada, muestra al menos MIN_LINES filas antes del corte."""
 
@@ -259,7 +413,7 @@ def col_widths(rows, total):
         return stringWidth(s, "Helvetica-Bold", CELL)
 
     # el texto visible: de un link cuenta el rotulo, no la url
-    rows = [[re.sub(r"\[([^\]]+)\]\([^)\s]+\)", r"\1", c).replace("*", "") for c in row] for row in rows]
+    rows = [[re.sub(r"\[([^\]]+)\]\([^)\s]+\)", r"\1", c).replace("*", "").replace("`", "") for c in row] for row in rows]
     full = [max(width(c) for c in col) + 2 * CELL_PAD for col in zip(*rows)]
     if sum(full) <= total:
         return [w * total / sum(full) for w in full]
@@ -285,6 +439,10 @@ def grid(rows, total, cell, head):
     ])
 
 
+def is_wide(f):
+    return isinstance(f, (Figures, Grid)) or isinstance(f, Code) and f.wide
+
+
 def bands(story, cols):
     """Reparte el texto entre diagramas y tablas en columnas parejas; cada uno queda entre dos tramos."""
     out, text = [], []
@@ -295,7 +453,7 @@ def bands(story, cols):
             text.clear()
 
     for f in story:
-        if isinstance(f, (Figures, Grid)) or isinstance(f, Kept) and isinstance(f.next, (Figures, Grid)):
+        if is_wide(f) or isinstance(f, Kept) and is_wide(f.next):
             flush()
             out.append(f)
         else:
@@ -304,8 +462,9 @@ def bands(story, cols):
     return out
 
 
-def story_from(text, body, head, sub, quote, figure, table, page_h):
+def story_from(text, body, head, sub, quote, figure, table, code, page_h):
     title, story = None, []
+    text, codes = fences(text)
     section, subsection = 0, 0
 
     def numbered(style, ref, line):
@@ -317,6 +476,9 @@ def story_from(text, body, head, sub, quote, figure, table, page_h):
         lines = [l.strip() for l in block.splitlines()]
         if all(re.match(r"[-*] ", l) for l in lines):
             story += [Block(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
+            continue
+        if len(lines) == 1 and re.fullmatch(r"\x01\d+\x01", lines[0]):
+            story.append(code(*codes[int(lines[0][1:-1])]))
             continue
         rows = table_rows(lines)
         if rows:
@@ -371,12 +533,17 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     def figure(caption_text, path):
         return diagram(base / path, caption_text, W - 2 * margin, (H - 2 * margin) * 0.6, color, caption)
 
-    title, story = story_from(text, body, head, sub, quote, figure, table, H - 2 * margin)
+    col_w = (W - 2 * margin - GUTTER * (cols - 1)) / cols
+
+    def code(lang, label, source):
+        lines = highlight(source, lang, color)
+        return Code(lines, label, wide=cols > 1 and longest(lines) > code_chars(col_w))
+
+    title, story = story_from(text, body, head, sub, quote, figure, table, code, H - 2 * margin)
     if story and isinstance(story[-1], Figures):
         story[-1].last = True
-    has_wide = any(isinstance(f, (Figures, Grid)) for f in story)
+    has_wide = any(is_wide(f) for f in story)
     story = keep_with_next(story)
-    col_w = (W - 2 * margin - GUTTER * (cols - 1)) / cols
 
     def columns(top):
         return [frame(margin + i * (col_w + GUTTER), margin, col_w, top - margin) for i in range(cols)]
@@ -419,7 +586,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("entrada", type=Path)
     ap.add_argument("-f", "--formato", choices=["columnas", "simple", "cuadernillo"], default="columnas")
-    ap.add_argument("--color", action="store_true", help="admite diagramas a color")
+    ap.add_argument("--color", action="store_true", help="admite diagramas a color y resalta el codigo con colores")
     ap.add_argument("-o", "--salida", type=Path)
     a = ap.parse_args()
     out = str(a.salida or a.entrada.with_suffix(".pdf"))
