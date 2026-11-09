@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["reportlab", "pypdf", "svglib", "pygments"]
+# dependencies = ["reportlab", "pypdf", "svglib", "pygments", "pyphen"]
 # ///
 """Convierte un archivo de texto en PDF.
 
@@ -54,6 +54,7 @@ CELL, CELL_PAD = BODY - 2, 5
 CODE, CODE_LEADING, CODE_PAD, LABEL = 8.5, 10.5, 5, 7.5
 CODE_GRAY = "#555555"  # comentarios y textos entre comillas, sin --color
 LAST_DRAWN = {}  # pagina -> ultimo elemento dibujado en ella
+CODE_WORDS = set()  # palabras escritas como `codigo`, que no se parten en silabas
 
 
 # caracteres que Helvetica no tiene
@@ -76,6 +77,7 @@ def inline(s):
 
     def keep(m):
         codes.append(m.group(1))
+        CODE_WORDS.update(re.findall(r"\w+", m.group(1)))
         return f"\x00{len(codes) - 1}\x00"
 
     s = escape(plain(re.sub(r"`([^`]+)`", keep, s)))
@@ -514,9 +516,16 @@ def frame(x, y, w, h):
     return Frame(x, y, w, h, leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
 
 
+def syllables(word, _es=[]):
+    if not _es:
+        import pyphen
+        _es.append(pyphen.Pyphen(lang="es_ES"))
+    return [] if word in CODE_WORDS else _es[0].iterate(word)
+
+
 def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     body = ParagraphStyle("b", fontName="Helvetica", fontSize=BODY, leading=BODY * 1.125,
-                          alignment=TA_JUSTIFY, spaceAfter=5)
+                          alignment=TA_JUSTIFY, spaceAfter=5, hyphenationLang=syllables)
     head = ParagraphStyle("h", fontName="Helvetica-Bold", fontSize=HEAD, leading=HEAD * 1.14,
                           spaceBefore=2, spaceAfter=5)
     sub = ParagraphStyle("s", parent=head, fontSize=BODY, leading=BODY * 1.2)

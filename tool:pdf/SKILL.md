@@ -15,7 +15,7 @@ uv run ~/.claude/skills/tool:pdf/scripts/pdf.py <entrada.txt> [-f columnas|simpl
 - `simple`: A4, una columna.
 - `cuadernillo` (booklet): páginas A5 de a dos por hoja A4 apaisada, reordenadas para que al imprimir doble faz y doblar al medio queden en orden. Al entregarlo, decirle al usuario que imprima doble faz **volteando por el borde corto**.
 
-La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*`, `` `código` `` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
+La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Las palabras del texto se parten en sílabas al final del renglón (español), para que el justificado no deje huecos; los títulos no se parten. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*`, `` `código` `` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
 
 Cada `## ` y `### ` lleva su número de sección (`1`, `1.1`), chico y tenue en el margen a la altura del título, para poder citarla ("explicame 2.1 del PDF"). En `columnas`, los títulos de la columna derecha lo llevan en el margen derecho. Para ubicar una sección en el texto del PDF, usar `pdftotext -layout`, que deja el número en la misma línea que el título.
 
