@@ -10,7 +10,7 @@
 
 </div>
 
-Doce skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Trece skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -21,6 +21,7 @@ Doce skills en español, cada una con sus pasos y su criterio de terminado, para
 | `tool:diagrama-hardware` | Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG con schemdraw. Basada en `schemdraw-circuit-generator` de takazudo/claude-resources. |
 | `tool:doc-estudio` | Escribe un `.md` que enseña un tema desde lo básico hasta la profundidad, con código verificado, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
+| `tool:informe-cambios` | **(En revisión)** Escribe un informe de cambios para enviar a un cliente: un `.md`, un PDF general y un PDF por etapa, cada cambio con su porqué, cómo se detectó y qué cambia. |
 | `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
 | `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
 | `tool:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
@@ -46,6 +47,7 @@ Algunas skills necesitan algo más:
 
 - **`tool:diagrama-hardware`**: Python 3 con `schemdraw` y `matplotlib`. Con [uv](https://docs.astral.sh/uv/) alcanza con `uv run --no-project --with schemdraw --with matplotlib python script.py`. Para simular el circuito usa `ngspice` (`sudo apt install ngspice`); si falta, la skill pregunta antes de instalarlo.
 - **`tool:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
+- **`tool:informe-cambios`**: Node.js con `npm` (instala sus dependencias la primera vez), Python 3 e internet para bajar las fuentes. Usa la skill `humanizer` y `pdftoppm` para revisar los PDF.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
 
@@ -57,6 +59,7 @@ Escribe el nombre de la skill en Claude Code, o pide la tarea con tus palabras y
 /tool:readme
 /tool:subtitulos busca subtítulos para este video
 /tool:pdf pasa notas.txt a cuadernillo
+/tool:informe-cambios arma el informe para el cliente
 /tool:mini-tuto cómo ajustar una grilla en este sitio
 ```
 
