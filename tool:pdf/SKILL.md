@@ -17,7 +17,11 @@ uv run ~/.claude/skills/tool:pdf/scripts/pdf.py <entrada.txt> [-f columnas|simpl
 
 La salida por defecto es el mismo nombre con `.pdf`, junto a la entrada. Las palabras del texto se parten en sílabas al final del renglón (español), para que el justificado no deje huecos; los títulos no se parten. Cada página lleva su número, chico y centrado al pie. El script entiende `# ` título, `## ` sección, `### ` subsección, bloques de `- ` viñetas, bloques de `> ` cita (sangrados), `**negrita**`, `*itálica*`, `` `código` `` y `[texto](url)`; los párrafos y bloques se separan con una línea en blanco. Si el texto usa otras marcas, se imprimen literales.
 
+En `simple` (una columna), si el texto entra en una sola página, el PDF adopta la jerarquía tipográfica de los informes de `tool:informe-cambios` (título 32, sección 22, subsección 12,5, cuerpo 10 con interlineado amplio); si con esos tamaños ya no entra, queda con los tamaños de siempre. En `columnas` y `cuadernillo` los tamaños no cambian.
+
 Cada `## ` y `### ` lleva su número de sección (`1`, `1.1`), chico y tenue en el margen a la altura del título, para poder citarla ("explicame 2.1 del PDF"). En `columnas`, los títulos de la columna derecha lo llevan en el margen derecho. Para ubicar una sección en el texto del PDF, usar `pdftotext -layout`, que deja el número en la misma línea que el título.
+
+En `simple`, las líneas `---` (reglas horizontales) no se imprimen, y el párrafo de entrada de una sección que quedaría justo antes de otro título va pegado a ese título, para que no quede solo al pie de una página.
 
 Cada bloque cortado muestra al menos 3 líneas antes del corte; si no llega, empieza en la columna o página siguiente y deja ese espacio en blanco. Un título, o un párrafo todo en negrita como `**[ESTUDIAR]**`, va pegado al comienzo de lo que le sigue. El script lo valida: si una página igual termina con un título o un bloque recién empezado, sale con error nombrando la página y el texto, y ese PDF no se entrega.
 

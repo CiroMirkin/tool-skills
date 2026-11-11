@@ -419,7 +419,7 @@ def col_widths(rows, total):
     full = [max(width(c) for c in col) + 2 * CELL_PAD for col in zip(*rows)]
     if sum(full) <= total:
         return [w * total / sum(full) for w in full]
-    least = [max(width(w) for c in col for w in c.split() or [""]) + 2 * CELL_PAD for col in zip(*rows)]
+    least = [min(max(width(w) for c in col for w in c.split() or [""]), 60) + 2 * CELL_PAD for col in zip(*rows)]
     spare = total - sum(least)
     if spare <= 0:
         return [w * total / sum(least) for w in least]
@@ -464,7 +464,7 @@ def bands(story, cols):
     return out
 
 
-def story_from(text, body, head, sub, quote, figure, table, code, page_h):
+def story_from(text, body, head, sub, title_style, quote, figure, table, code, page_h, simple=False):
     title, story = None, []
     text, codes = fences(text)
     section, subsection = 0, 0
@@ -476,6 +476,8 @@ def story_from(text, body, head, sub, quote, figure, table, code, page_h):
 
     for block in re.split(r"\n\s*\n", text.replace("\r", "").strip()):
         lines = [l.strip() for l in block.splitlines()]
+        if simple and all(re.fullmatch(r"-{3,}", l) for l in lines):
+            continue  # regla horizontal: en una columna no se imprime
         if all(re.match(r"[-*] ", l) for l in lines):
             story += [Block(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
             continue
@@ -504,11 +506,16 @@ def story_from(text, body, head, sub, quote, figure, table, code, page_h):
             section, subsection = section + 1, 0
             story.append(numbered(head, str(section), line[3:]))
         elif line.startswith("# ") and title is None and not story:
-            title = Paragraph(inline(line[2:]), head)
+            title = Head(inline(line[2:]), title_style)
         elif re.fullmatch(r"\*\*[^*]+\*\*", line):
             story.append(Head(inline(line), body))
         else:
             story.append(Block(inline(line), body))
+    if simple:
+        # el parrafo de entrada de una seccion que cae justo antes de otro titulo va pegado a ese titulo
+        for i in range(2, len(story)):
+            if isinstance(story[i], Head) and type(story[i - 1]) is Block and isinstance(story[i - 2], Head):
+                story[i - 1].__class__ = Head
     return title, story
 
 
@@ -523,12 +530,23 @@ def syllables(word, _es=[]):
     return [] if word in CODE_WORDS else _es[0].iterate(word)
 
 
-def render(text, out, cols, pagesize, base, color, margin=MARGIN):
-    body = ParagraphStyle("b", fontName="Helvetica", fontSize=BODY, leading=BODY * 1.125,
-                          alignment=TA_JUSTIFY, spaceAfter=5, hyphenationLang=syllables)
-    head = ParagraphStyle("h", fontName="Helvetica-Bold", fontSize=HEAD, leading=HEAD * 1.14,
-                          spaceBefore=2, spaceAfter=5)
-    sub = ParagraphStyle("s", parent=head, fontSize=BODY, leading=BODY * 1.2)
+def render(text, out, cols, pagesize, base, color, margin=MARGIN, informe=False):
+    """`informe`: jerarquia tipografica de los PDF de informe-cambios (titulo 32, seccion 22, subseccion 12,5, cuerpo 10)."""
+    LAST_DRAWN.clear()
+    if informe:
+        body = ParagraphStyle("b", fontName="Helvetica", fontSize=10, leading=15.5,
+                              alignment=TA_JUSTIFY, spaceAfter=8, hyphenationLang=syllables)
+        head = ParagraphStyle("h", fontName="Helvetica-Bold", fontSize=22, leading=25.3,
+                              spaceBefore=14, spaceAfter=8)
+        sub = ParagraphStyle("s", parent=head, fontSize=12.5, leading=16, spaceBefore=8, spaceAfter=4)
+        title_style = ParagraphStyle("t", parent=head, fontSize=32, leading=36.8, spaceBefore=0, spaceAfter=14)
+    else:
+        body = ParagraphStyle("b", fontName="Helvetica", fontSize=BODY, leading=BODY * 1.125,
+                              alignment=TA_JUSTIFY, spaceAfter=5, hyphenationLang=syllables)
+        head = ParagraphStyle("h", fontName="Helvetica-Bold", fontSize=HEAD, leading=HEAD * 1.14,
+                              spaceBefore=2, spaceAfter=5)
+        sub = ParagraphStyle("s", parent=head, fontSize=BODY, leading=BODY * 1.2)
+        title_style = head
     quote = ParagraphStyle("q", parent=body, leftIndent=12)
     caption = ParagraphStyle("c", parent=body, fontName="Helvetica-Oblique", fontSize=BODY - 2,
                              leading=(BODY - 2) * 1.2, alignment=TA_CENTER, spaceAfter=8)
@@ -548,11 +566,13 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
         lines = highlight(source, lang, color)
         return Code(lines, label, wide=cols > 1 and longest(lines) > code_chars(col_w))
 
-    title, story = story_from(text, body, head, sub, quote, figure, table, code, H - 2 * margin)
+    title, story = story_from(text, body, head, sub, title_style, quote, figure, table, code, H - 2 * margin, simple=cols == 1)
     if story and isinstance(story[-1], Figures):
         story[-1].last = True
     has_wide = any(is_wide(f) for f in story)
-    story = keep_with_next(story)
+    # el titulo va pegado a lo que le sigue, asi nunca queda solo en una pagina
+    inline_title = title is not None and (cols == 1 or has_wide)
+    story = keep_with_next(([title] if inline_title else []) + story)
 
     def columns(top):
         return [frame(margin + i * (col_w + GUTTER), margin, col_w, top - margin) for i in range(cols)]
@@ -564,14 +584,16 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN):
     templates = [PageTemplate(id="rest", frames=columns(H - margin), onPage=page_number)]
     if cols > 1 and has_wide:
         templates = [PageTemplate(id="bands", frames=[Frame(margin, margin, W - 2 * margin, H - 2 * margin, 0, 0, 0, 0, id="full")], onPage=page_number)]
-        story = ([title] if title else []) + bands(story, cols)
-    elif title:
-        title_h = 0.32 * inch
+        story = bands(story, cols)
+    elif title and not inline_title:
+        title_h = title_style.leading + title_style.spaceAfter + 4
         first = [frame(margin, H - margin - title_h, W - 2 * margin, title_h)] + columns(H - margin - title_h)
         templates.insert(0, PageTemplate(id="first", frames=first, onPage=page_number))
         story = [title, NextPageTemplate("rest"), FrameBreak()] + story
-    BaseDocTemplate(out, pagesize=pagesize, pageTemplates=templates).build(story)
+    doc = BaseDocTemplate(out, pagesize=pagesize, pageTemplates=templates)
+    doc.build(story)
     check_page_ends()
+    return doc.page
 
 
 def booklet(src, out):
@@ -607,7 +629,14 @@ def main():
         buf.seek(0)
         booklet(buf, out)
     else:
-        render(text, out, 2 if a.formato == "columnas" else 1, A4, base, a.color)
+        cols = 2 if a.formato == "columnas" else 1
+        # una columna y una sola pagina: jerarquia tipografica de informe-cambios, si sigue entrando en una
+        if render(text, out, cols, A4, base, a.color) == 1 and cols == 1:
+            try:
+                if render(text, out, cols, A4, base, a.color, informe=True) != 1:
+                    raise ValueError
+            except Exception:
+                render(text, out, cols, A4, base, a.color)
     print(out)
 
 
