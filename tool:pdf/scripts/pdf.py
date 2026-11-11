@@ -481,6 +481,11 @@ def story_from(text, body, head, sub, title_style, quote, figure, table, code, p
         if all(re.match(r"[-*] ", l) for l in lines):
             story += [Block(inline(l[2:]), ParagraphStyle("l", parent=body, leftIndent=10), bulletText="•") for l in lines]
             continue
+        if all(re.match(r"\d+[.)] ", l) for l in lines):
+            # lista numerada: el numero va en negrita y entre parentesis, "(2)"
+            style = ParagraphStyle("n", parent=body, leftIndent=18, bulletIndent=0, bulletFontName="Helvetica-Bold")
+            story += [Block(inline(l.split(" ", 1)[1]), style, bulletText=f"({l.split('.')[0].split(')')[0]})") for l in lines]
+            continue
         if len(lines) == 1 and re.fullmatch(r"\x01\d+\x01", lines[0]):
             story.append(code(*codes[int(lines[0][1:-1])]))
             continue
