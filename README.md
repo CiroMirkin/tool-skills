@@ -10,7 +10,7 @@
 
 </div>
 
-Trece skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Catorce skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -28,6 +28,7 @@ Trece skills en español, cada una con sus pasos y su criterio de terminado, par
 | `tool:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
 | `tool:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, o un vistazo general del área si no tienes uno, con el enlace de cada fuente. |
 | `tool:subtitulos` | Busca, descarga y sincroniza subtítulos para un video local, y verifica contra el audio que encajan. |
+| `tool:whatsapp` | **(En etapa de prueba)** Envía un PDF u otro archivo a tu propio WhatsApp con [OpenWA](https://github.com/rmyndharis/OpenWA), un gateway autoalojado. |
 | `tool:use-cases` | Genera el documento de casos de uso de un proyecto (actores, historias de usuario y reglas de negocio) para alguien no técnico. |
 
 ## Instalación
@@ -49,6 +50,7 @@ Algunas skills necesitan algo más:
 - **`tool:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
 - **`tool:informe-cambios`**: Node.js con `npm` (instala sus dependencias la primera vez), Python 3 e internet para bajar las fuentes. Usa la skill `humanizer` y `pdftoppm` para revisar los PDF.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
+- **`tool:whatsapp`**: Python 3, y OpenWA corriendo (con Docker) con una sesión de WhatsApp vinculada; la primera vez la skill te guía para configurarlo. OpenWA es un cliente no oficial: lee su aviso de riesgo antes de vincular tu número.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
 
 ## Uso
