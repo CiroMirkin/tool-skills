@@ -6,7 +6,8 @@ Adaptado de [ItsssssJack/SlopMonster](https://github.com/ItsssssJack/SlopMonster
 
 - La apertura responde la primera pregunta del lector sobre el tema.
 - Cada oración agrega algo útil y se sigue de la anterior.
-- Cada concepto se explica antes de su primer uso, y los términos técnicos donde el lector los necesita.
+- Cada concepto se explica antes de su primer uso, y los términos técnicos donde el lector los necesita. Explicado es que el lector puede decir qué es, para qué sirve y qué pasa sin él; una definición de una línea se amplía.
+- Cada nombre propio (empresa, estándar, producto) llega después de un párrafo que dice qué es y por qué la lección lo usa.
 - Una comparación o metáfora queda solo si explica el comportamiento. Las demás se reemplazan por la descripción directa.
 - Las condiciones siguen pegadas a la afirmación que limitan.
 
@@ -20,7 +21,7 @@ Adaptado de [ItsssssJack/SlopMonster](https://github.com/ItsssssJack/SlopMonster
 
 ## Pasada 3: contexto y exactitud
 
-- Leer la lección entera de corrido: ¿le sirve a este lector en este formato?
+- Leer la lección entera de corrido: ¿le sirve a este lector, con el nivel que dijo tener, en este formato? Fundamentos que se lee como implementación, o avanzado que repite conceptos, vuelve al paso de redacción.
 - Comparar con el original: ningún dato exagerado, ninguna salvedad perdida, ningún argumento cambiado.
 - Si falta un dato, marcarlo como `[falta dato]` y avisarlo en las notas; todo dato sale de una fuente de la lección.
 - Quedan exactos el código, los comandos, el código en línea, los enlaces, las imágenes y la estructura de Markdown.

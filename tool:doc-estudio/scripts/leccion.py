@@ -4,10 +4,13 @@
   leccion.py armar <fuente.md> <leccion.md> --codigo <carpeta>
       Reemplaza cada línea @@ruta/al/archivo@@ por ese archivo, relativo a --codigo.
 
-  leccion.py comprobar <leccion.md> --codigo <carpeta> [--sin-enlaces]
-      Revisa que cada bloque de código esté en un archivo de --codigo, que existan las
-      imágenes y tengan texto alternativo, que respondan los enlaces y sus anclas, que no
-      queden marcadores ni rayas largas, y que la correcta del quiz no sea la más larga.
+  leccion.py comprobar <leccion.md> --codigo <carpeta> [--sin-enlaces] [--fundamentos]
+      Revisa que cada bloque de código esté en un archivo de --codigo (el repo de pruebas), que
+      el repo tenga README y ninguna dependencia instalada, que existan las imágenes y tengan
+      texto alternativo, que respondan los enlaces y sus anclas, que no queden marcadores ni
+      rayas largas, que la correcta del quiz no sea la más larga y su respuesta ocupe una sola
+      línea, y que haya exactamente tres tareas. Con --fundamentos, además, que el código no
+      pase de MAX_FRAGMENTOS fragmentos de MAX_LINEAS_FRAGMENTO líneas.
       Sale con código 1 si encuentra algún problema.
 """
 import argparse
@@ -22,6 +25,8 @@ BLOQUE = re.compile(r"^```([^\n]*)\n(.*?)^```", re.S | re.M)
 INCLUSION = re.compile(r"^@@([^@\n]+)@@$", re.M)
 ORDINALES = {"primera": 0, "segunda": 1, "tercera": 2, "cuarta": 3}
 TOLERANCIA_QUIZ = 6
+DEPENDENCIAS = {"node_modules", ".venv", "venv", "target", "__pycache__"}
+MAX_FRAGMENTOS, MAX_LINEAS_FRAGMENTO = 5, 15
 
 
 def normalizar(texto):
@@ -41,7 +46,7 @@ def armar(fuente, salida, codigo):
 def revisar_codigo(md, codigo):
     archivos = []
     for ruta in codigo.rglob("*"):
-        if ruta.is_file():
+        if ruta.is_file() and not DEPENDENCIAS & set(ruta.relative_to(codigo).parts):
             try:
                 archivos.append(normalizar(ruta.read_text(encoding="utf-8")))
             except UnicodeDecodeError:
@@ -57,6 +62,37 @@ def revisar_codigo(md, codigo):
             problemas.append(f"bloque {info!r} sin archivo verificado: {primera[:70]}")
     print(f"código: {total} bloques revisados")
     return problemas
+
+
+def revisar_pruebas(codigo):
+    problemas = []
+    if not (codigo / "README.md").is_file():
+        problemas.append("el repo de pruebas no tiene README.md con el set-up")
+    for nombre in sorted(DEPENDENCIAS):
+        if (codigo / nombre).exists():
+            problemas.append(f"el repo de pruebas trae dependencias instaladas: {nombre}")
+    return problemas
+
+
+def revisar_fundamentos(md):
+    problemas = []
+    bloques = [c for i, c in BLOQUE.findall(md) if (i.split() or [""])[0] not in SIN_VERIFICAR]
+    if len(bloques) > MAX_FRAGMENTOS:
+        problemas.append(f"fundamentos tiene {len(bloques)} fragmentos de código, el máximo es {MAX_FRAGMENTOS}")
+    for cuerpo in bloques:
+        if len(cuerpo.strip().splitlines()) > MAX_LINEAS_FRAGMENTO:
+            problemas.append(f"fragmento de más de {MAX_LINEAS_FRAGMENTO} líneas: {cuerpo.strip().splitlines()[0][:60]}")
+    return problemas
+
+
+def revisar_tareas(md):
+    inicio = re.search(r"^## Tareas\s*$", md, re.M)
+    if not inicio:
+        return ["falta la sección ## Tareas"]
+    fin = re.search(r"^## ", md[inicio.end():], re.M)
+    tareas = md[inicio.end():inicio.end() + fin.start()] if fin else md[inicio.end():]
+    n = len(re.findall(r"^### Tarea \d+\.", tareas, re.M))
+    return [] if n == 3 else [f"hacen falta 3 tareas (### Tarea N.) y hay {n}"]
 
 
 def revisar_imagenes(md, base):
@@ -102,6 +138,8 @@ def revisar_quiz(md):
         if len(opciones) != 4 or not ordinal:
             problemas.append(f"quiz {numero}: hacen falta 4 opciones y 'La correcta es la <ordinal>'")
             continue
+        if not re.search(r"^<details><summary>[^\n]*</summary>[^\n]*</details>\s*$", pregunta, re.M):
+            problemas.append(f"quiz {numero}: la respuesta va en una sola línea <details><summary>..</summary>..</details>")
         correcta = ORDINALES[ordinal.group(1)]
         otras = opciones[:correcta] + opciones[correcta + 1:]
         if opciones[correcta] > max(otras) + TOLERANCIA_QUIZ:
@@ -109,9 +147,12 @@ def revisar_quiz(md):
     return problemas
 
 
-def comprobar(leccion, codigo, sin_enlaces):
+def comprobar(leccion, codigo, sin_enlaces, fundamentos):
     md = leccion.read_text(encoding="utf-8")
-    problemas = revisar_codigo(md, codigo) + revisar_imagenes(md, leccion.parent) + revisar_quiz(md)
+    problemas = (revisar_codigo(md, codigo) + revisar_pruebas(codigo) + revisar_tareas(md)
+                 + revisar_imagenes(md, leccion.parent) + revisar_quiz(md))
+    if fundamentos:
+        problemas += revisar_fundamentos(md)
     if not sin_enlaces:
         problemas += revisar_enlaces(md)
     prosa = BLOQUE.sub("", md)
@@ -138,11 +179,12 @@ def main():
     c.add_argument("leccion", type=Path)
     c.add_argument("--codigo", type=Path, required=True)
     c.add_argument("--sin-enlaces", action="store_true")
+    c.add_argument("--fundamentos", action="store_true")
     args = ap.parse_args()
     if args.accion == "armar":
         armar(args.fuente, args.salida, args.codigo)
     else:
-        sys.exit(comprobar(args.leccion, args.codigo, args.sin_enlaces))
+        sys.exit(comprobar(args.leccion, args.codigo, args.sin_enlaces, args.fundamentos))
 
 
 if __name__ == "__main__":
