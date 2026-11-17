@@ -24,6 +24,13 @@ Un bloque de tabla (`| a | b |`, con `|---|---|` como segunda linea) ocupa todo 
 un diagrama. Se corta entre filas, tras MIN_LINES filas o mas, y repite el encabezado en la pagina
 siguiente.
 
+Un `<details><summary>..</summary>texto</details>` en una sola linea (respuesta de quiz) se imprime
+sin desplegable y boca abajo (girado 180 grados), para leerlo solo dando vuelta la pagina. Las demas
+marcas `<details>` se descartan y el `<summary>` queda como linea en negrita.
+
+La primera pagina lleva la fecha de hoy (dd/mm/aaaa) arriba a la derecha, dentro del margen, al 80%
+de opacidad y con el tamano del cuerpo.
+
 Cada `## ` y `### ` lleva en el margen su numero de seccion (1, 1.1, ...), para poder citarla.
 
 Un bloque que no llega a mostrar MIN_LINES lineas empieza en la columna o pagina siguiente, y un
@@ -35,7 +42,7 @@ pagina termina con un titulo o un bloque recien empezado, el script sale con err
   cuadernillo  paginas A5 impuestas de a dos por hoja A4 apaisada, en orden de cuadernillo:
                imprimir doble faz volteando por el borde corto, doblar al medio
 """
-import argparse, io, re
+import argparse, datetime, io, re
 from pathlib import Path
 
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
@@ -49,6 +56,7 @@ from svglib.svglib import svg2rlg
 MARGIN, GUTTER, BODY, HEAD = 0.6 * inch, 0.3 * inch, 12, 14
 NEEDED = 72  # lo minimo que debe quedar en la pagina para empezar el texto siguiente
 MIN_LINES = 3  # lineas que un bloque cortado debe mostrar antes del corte
+DATE_ALPHA = 0.8  # fecha de la primera pagina
 REF_SIZE, REF_ALPHA, REF_GAP = 7, 0.45, 6  # numero de seccion en el margen
 CELL, CELL_PAD = BODY - 2, 5
 CODE, CODE_LEADING, CODE_PAD, LABEL = 8.5, 10.5, 5, 7.5
@@ -94,6 +102,27 @@ class Block(Paragraph):
     def draw(self):
         LAST_DRAWN[self.canv.getPageNumber()] = self
         super().draw()
+
+
+class Upside(Flowable):
+    """Un parrafo girado 180 grados: se lee dando vuelta la pagina."""
+
+    def __init__(self, para):
+        super().__init__()
+        self.para = para
+
+    def wrap(self, aW, aH):
+        self.width, self.height = aW, self.para.wrap(aW, 1e6)[1]
+        return self.width, self.height + self.para.style.spaceAfter
+
+    def draw(self):
+        LAST_DRAWN[self.canv.getPageNumber()] = self
+        c = self.canv
+        c.saveState()
+        c.translate(self.width, self.height)
+        c.rotate(180)
+        self.para.drawOn(c, 0, 0)
+        c.restoreState()
 
 
 class Head(Block):
@@ -494,6 +523,17 @@ def story_from(text, body, head, sub, title_style, quote, figure, table, code, p
             story.append(table(rows))
             continue
         line = " ".join(lines)
+        det = re.fullmatch(r"<details><summary>.*?</summary>(.*)</details>", line, re.S)
+        if det:
+            # respuesta de quiz: sin desplegable, boca abajo, se lee dando vuelta la pagina
+            story.append(Upside(Block(inline(det.group(1).strip()), ParagraphStyle("u", parent=body, alignment=TA_LEFT))))
+            continue
+        if re.fullmatch(r"</?details>", line):
+            continue
+        summ = re.fullmatch(r"<summary>(.*)</summary>", line)
+        if summ:
+            story.append(Head(inline(f"**{summ.group(1)}**"), body))
+            continue
         fig = re.fullmatch(r"!\[(.*?)\]\((.+)\)", line)
         if fig:
             f = figure(*fig.groups())
@@ -582,9 +622,18 @@ def render(text, out, cols, pagesize, base, color, margin=MARGIN, informe=False)
     def columns(top):
         return [frame(margin + i * (col_w + GUTTER), margin, col_w, top - margin) for i in range(cols)]
 
+    fecha = datetime.date.today().strftime("%d/%m/%Y")
+
     def page_number(canvas, doc):
         canvas.setFont("Helvetica", 8)
         canvas.drawCentredString(W / 2, margin / 2, str(doc.page))
+        if doc.page == 1:
+            # fecha solo en la primera pagina: arriba a la derecha, dentro del margen, tamano del cuerpo
+            canvas.saveState()
+            canvas.setFont("Helvetica", body.fontSize)
+            canvas.setFillAlpha(DATE_ALPHA)
+            canvas.drawRightString(W - margin, H - margin / 2 - body.fontSize / 3, fecha)
+            canvas.restoreState()
 
     templates = [PageTemplate(id="rest", frames=columns(H - margin), onPage=page_number)]
     if cols > 1 and has_wide:
