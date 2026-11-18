@@ -14,7 +14,7 @@ Lo que el usuario nombre (archivo, carpeta, commit, rama). Si no nombra nada, el
 ## Pasos
 
 1. **Leer cada comentario del alcance junto al código que acompaña** (incluye docstrings y cabeceras). Hecho cuando cada uno quedó clasificado en una de las categorías de abajo.
-2. **Buscar los huecos**: código cuyo motivo es invisible y no tiene comentario (número mágico, `sleep`, orden de líneas que importa, `catch` que traga errores, workaround, valor de config externo). Para cada uno, buscar el motivo en `git log -L`/`git blame`, el commit, la issue o el ADR que lo introdujo. Hecho cuando cada hueco tiene su motivo encontrado o quedó marcado como *pregunta para el usuario*: el motivo se cita, no se inventa.
+2. **Buscar los huecos**: código cuyo motivo es invisible y no tiene comentario (número mágico, `sleep`, orden de líneas que importa, `catch` que traga errores, workaround, valor de config externo, regex cuyo nombre o validación cercana no dicen qué valida). Para cada uno, buscar el motivo en `git log -L`/`git blame`, el commit, la issue o el ADR que lo introdujo. Hecho cuando cada hueco tiene su motivo encontrado o quedó marcado como *pregunta para el usuario*: el motivo se cita, no se inventa.
 3. **Reportar**, agrupado por categoría. Cada hallazgo lleva un id correlativo en todo el reporte (C1, C2…, sin reiniciar por categoría) para que el usuario los apruebe por id, y `archivo:línea`. Debajo va un bloque de código con el comentario actual y, en la línea siguiente, el propuesto:
 
    ```tsx
@@ -32,6 +32,7 @@ Lo que el usuario nombre (archivo, carpeta, commit, rama). Si no nombra nada, el
 - **Mentira** → corregir o borrar: contradice al código actual (desfasado, TODO ya resuelto, parámetro que ya no existe). Es peor que no tener comentario.
 - **Hueco** → agregar: salió del paso 2.
 - **Confuso** → reescribir: cuenta algo invisible pero no se lee de corrido (ver *Cómo se escribe*).
+- **Ponytail** → reescribir: un comentario que empieza con `ponytail:` se reescribe según lo que dice. Si es un riesgo conocido, empieza con `ADVERTENCIA:` y el texto se reescribe de corrido. Si es una recomendación para cuando el sistema crezca, se dice con *al escalar cambiar a …* o *si … entonces …*.
 - **Sección** → proponer un archivo: un comentario que delimita una sección con nombre muestra que el archivo hace varias cosas. Recomendar refactorizar cada sección a su propio archivo.
 
 Ejemplos de **Mezcla**, donde lo que se va se puede leer en el código:
@@ -54,6 +55,36 @@ nunca ve un PNG a medias. Nunca pisa: si otra captura ocupa el nombre entre medi
 siguiente. Lanza OSError."""
 # Después
 """Pasa por un temporal oculto para que `listar` nunca vea un PNG a medias y lanza OSError."""
+```
+
+Ejemplos de **Ponytail**:
+
+```
+// Antes
+// ponytail: sin lock, un lote puede entrar entre el count y el update; bloquear si pasa en la práctica
+// Después
+// ADVERTENCIA: sin lock un lote puede entrar entre el count y el update y si pasa en la práctica entonces hay que bloquear
+
+// Antes
+// ponytail: lista en memoria
+// Después
+// Al escalar cambiar a una tabla en la base porque la lista en memoria no aguanta muchos pedidos
+```
+
+Ejemplos de **Hueco** con regex, donde el comentario o el nombre dicen qué valida:
+
+```ts
+// Antes
+.regex(/^\d{7,8}$/, "El DNI debe tener 7 u 8 dígitos")
+// Después, el mensaje ya lo aclara y no hace falta nada
+
+// Antes
+.regex(/^\d{7,8}$/)
+// Después, con un comentario
+// DNI de 7 u 8 dígitos
+.regex(/^\d{7,8}$/)
+// Después, con un nombre
+const DNI = regex(/^\d{7,8}$/) // el nombre ya dice qué valida y no necesita comentario
 ```
 
 Ejemplos de **Sección**:
@@ -110,6 +141,24 @@ con el primer n ≥ 2 libre. Nunca devuelve una que ya exista."""
 # Puede haber más de uno por bajadas a rutas viejas; sorted para que la elección no dependa del orden del set.
 # Después
 # Puede haber más de uno por bajadas a rutas viejas entonces se ordenan para que la elección no dependa del orden del set.
+```
+
+Tampoco se usa `→`. La relación se dice con *se convierte en*, *da* o *retorna*. Y si el comentario no lleva una lista de ejemplos, no termina en `:`.
+
+```python
+# Antes
+# "40090" → "040090"
+# Después
+# "40090" se convierte en "040090"
+```
+
+El sujeto se nombra con un verbo, no con una preposición suelta.
+
+```ts
+// Antes
+// Corte desde una mesa por la API v1. El DNI solo se usa si el corte comienza el pedido
+// Después
+// Corte que llega desde una mesa por la API v1. El DNI solo se usa si el corte comienza el pedido
 ```
 
 Un signo se queda solo cuando es lo que mejor se lee:
