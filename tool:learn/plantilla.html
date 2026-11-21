@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{titulo}}</title>
+<style>
+:root {
+  --fondo: #fbfaf7; --panel: #f1efe9; --tinta: #23252b; --suave: #5d6168; --linea: #dcd9d0;
+  --acento: #b3441f; --ok: #2f7a4b; --aviso: #9a6a00; --codigo: #f4f2ec;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #17181b; --panel: #202226; --tinta: #e8e6e1; --suave: #a2a5ab; --linea: #34373d;
+    --acento: #f08a62; --ok: #6cc08b; --aviso: #e0b04a; --codigo: #1d1f23;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+body { margin: 0; background: var(--fondo); color: var(--tinta);
+  font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.pagina { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 2.5rem;
+  padding: 2rem 1.5rem 6rem 0.75rem; }
+main { max-width: 64rem; }
+nav { position: sticky; top: 1.5rem; align-self: start; font-size: 0.92rem; }
+nav a { display: block; padding: 0.3rem 0.7rem; color: var(--suave); text-decoration: none;
+  border-left: 2px solid var(--linea); }
+nav a.activa { color: var(--tinta); border-left-color: var(--acento); }
+nav .marca { font-weight: 600; margin: 0 0 0.8rem; padding-left: 0.7rem; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 0.4rem; }
+h2 { font-size: 1.5rem; margin: 3.5rem 0 0.8rem; padding-top: 1rem; border-top: 1px solid var(--linea); }
+h3 { font-size: 1.15rem; margin: 2rem 0 0.4rem; }
+p, li { max-width: 68ch; }
+a { color: var(--acento); }
+.meta { color: var(--suave); font-size: 0.92rem; margin: 0 0 2rem; }
+code { font: 0.9em ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: var(--panel);
+  padding: 0.1em 0.35em; border-radius: 4px; }
+figure { margin: 1.5rem 0; }
+figcaption { font-size: 0.88rem; color: var(--suave); }
+.codigo figcaption { display: flex; gap: 1rem; flex-wrap: wrap; padding: 0.45rem 0.9rem;
+  background: var(--panel); border: 1px solid var(--linea); border-bottom: 0; border-radius: 8px 8px 0 0; }
+.codigo .ruta { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--tinta); }
+.codigo pre { margin: 0; padding: 0.8rem 0; overflow-x: auto; background: var(--codigo);
+  border: 1px solid var(--linea); border-radius: 0 0 8px 8px; }
+.codigo pre code { background: none; padding: 0; font-size: 0.86rem; line-height: 1.55; display: block;
+  width: max-content; min-width: 100%; }
+.l::before { content: attr(data-n); display: inline-block; width: 3.2ch; margin: 0 1.4ch 0 1rem;
+  text-align: right; color: var(--suave); opacity: 0.7; user-select: none; }
+.diagrama svg { width: 100%; height: auto; display: block; }
+.nota, .pregunta, .ojo { margin: 1.3rem 0; padding: 0.8rem 1rem; border-left: 3px solid var(--linea);
+  background: var(--panel); border-radius: 0 8px 8px 0; }
+.pregunta { border-left-color: var(--acento); }
+.ojo { border-left-color: var(--aviso); }
+.nota > :first-child, .pregunta > :first-child, .ojo > :first-child { margin-top: 0; }
+.nota > :last-child, .pregunta > :last-child, .ojo > :last-child { margin-bottom: 0; }
+details { margin: 0.8rem 0; border: 1px solid var(--linea); border-radius: 8px; background: var(--fondo); }
+details > summary { cursor: pointer; padding: 0.55rem 0.9rem; font-weight: 600; }
+details > :not(summary) { margin-left: 0.9rem; margin-right: 0.9rem; }
+details[open] > summary { border-bottom: 1px solid var(--linea); margin-bottom: 0.7rem; }
+details > :last-child { margin-bottom: 0.9rem; }
+.ejercicio { margin: 2.2rem 0; }
+.escalon { margin: 2.2rem 0; padding-left: 1rem; border-left: 3px solid var(--ok); }
+.escalon h3 { margin-top: 0; }
+.piezas { color: var(--suave); font-size: 0.92rem; margin: 0 0 0.6rem; }
+.etiqueta { display: inline-block; font-size: 0.8rem; padding: 0.05rem 0.55rem; border-radius: 99px;
+  border: 1px solid var(--linea); color: var(--suave); }
+.pasos { padding-left: 1.4rem; }
+.pasos > li { margin: 1.4rem 0; }
+.pasos .hecho { margin-right: 0.4rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--linea); vertical-align: top; }
+th { color: var(--suave); font-weight: 600; }
+@media (max-width: 60rem) {
+  .pagina { display: block; padding: 1rem 1rem 4rem; }
+  nav { position: static; margin-bottom: 2rem; }
+  nav a { display: inline-block; border-left: 0; padding: 0.2rem 0.6rem 0.2rem 0; }
+}
+/*PYGMENTS*/
+</style>
+</head>
+<body>
+<div class="pagina">
+<nav aria-label="Secciones">
+  <p class="marca">{{tema}}</p>
+  <a href="#resumen">Resumen</a>
+  <a href="#concepto">El concepto desde cero</a>
+  <a href="#practica">Práctica</a>
+  <a href="#codigo-proyecto">Código del proyecto</a>
+  <a href="#codigo-ejemplo">Código de otro contexto</a>
+  <a href="#bugs">Encontrá el error</a>
+  <a href="#tarea">Tu tarea</a>
+  <a href="#fuentes">Fuentes y verificación</a>
+</nav>
+<main>
+<h1>{{titulo}}</h1>
+<p class="meta">{{proyecto}}, commit {{hash}}, {{fecha}}. Nivel de partida: {{nivel}}.</p>
+
+<section id="resumen">
+<h2>Resumen</h2>
+<!-- qué vas a poder hacer al terminar, en tres o cuatro frases; mapa de las secciones; tiempo estimado -->
+</section>
+
+<section id="concepto">
+<h2>El concepto desde cero</h2>
+<!-- escalera de conceptos, cada uno explicado; al menos un diagrama de flujo y uno de secuencia -->
+</section>
+
+<section id="practica">
+<h2>Práctica, de a un escalón</h2>
+<!-- tabla pieza a escalón; 4 a 6 escalones, cada uno agrega una sola pieza y trae su comando de comprobación; mayormente en el recorte del dominio del proyecto, 1 o 2 en dominio ficticio -->
+</section>
+
+<section id="codigo-proyecto">
+<h2>Código del proyecto</h2>
+<!-- 2 a 4 fragmentos reales, cada uno con su línea Piezas que usa y su pregunta de lectura antes de la explicación -->
+</section>
+
+<section id="codigo-ejemplo">
+<h2>El mismo concepto en otro contexto</h2>
+<!-- proyecto ficticio, 2 o más fragmentos ejecutados -->
+</section>
+
+<section id="bugs">
+<h2>Encontrá el error</h2>
+<!-- 3 a 5 ejercicios: errores y malas prácticas -->
+</section>
+
+<section id="tarea">
+<h2>Tu tarea</h2>
+<!-- contexto, objetivo, pasos con ayuda, cómo comprobar -->
+</section>
+
+<section id="fuentes">
+<h2>Fuentes y verificación</h2>
+<!-- fuentes con enlace, y tabla de lo que se ejecutó -->
+</section>
+</main>
+</div>
+<script>
+(function () {
+  var enlaces = document.querySelectorAll("nav a");
+  if ("IntersectionObserver" in window) {
+    var visto = new IntersectionObserver(function (items) {
+      items.forEach(function (it) {
+        if (!it.isIntersecting) return;
+        enlaces.forEach(function (a) {
+          a.classList.toggle("activa", a.getAttribute("href") === "#" + it.target.id);
+        });
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    document.querySelectorAll("main > section").forEach(function (s) { visto.observe(s); });
+  }
+  var clave = "learn:" + location.pathname;
+  var cajas = document.querySelectorAll(".pasos input[type=checkbox], .escalon input[type=checkbox]");
+  var guardado = {};
+  try { guardado = JSON.parse(localStorage.getItem(clave) || "{}"); } catch (e) {}
+  cajas.forEach(function (c, i) {
+    c.checked = !!guardado[i];
+    c.addEventListener("change", function () {
+      guardado[i] = c.checked;
+      try { localStorage.setItem(clave, JSON.stringify(guardado)); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>
