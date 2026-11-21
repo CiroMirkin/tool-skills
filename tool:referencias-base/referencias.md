@@ -1,6 +1,8 @@
-# Fuentes fijas de desarrollo de software
+# Referencias de desarrollo de software
 
-Se consultan en todo roadmap de desarrollo de software, junto con las fuentes que pase el usuario. En cada una, abrir solo las secciones que tocan el caso y enlazar la sección exacta.
+Base compartida por `tool:roadmap`, `tool:learn` y `tool:doc-estudio`. Cada referencia es un **repo** o un **sitio**, y se consulta cuando el tema es de desarrollo de software, junto con las fuentes que pase el usuario. Se suman entradas con `/tool:referencia <url>`.
+
+Una referencia es el **camino**, no el dueño: sirve para encontrar qué cubrir y dónde mirar, y se cita la sección o la lección que llevó ahí junto con la fuente que define cada dato. Se recorre el índice, se abren solo las secciones que tocan el caso y se enlaza la exacta: en un repo, la sección con su ancla `#...`; en un sitio, la lección o el capítulo, nunca la portada.
 
 ## Arquitectura, sistemas y escala
 
@@ -29,6 +31,14 @@ Se consultan en todo roadmap de desarrollo de software, junto con las fuentes qu
 [DevCaress/guia-entrevistas-de-programacion](https://github.com/DevCaress/guia-entrevistas-de-programacion): guía de entrevistas de programación en español.
 
 [bregman-arie/devops-exercises](https://github.com/bregman-arie/devops-exercises): preguntas y ejercicios de DevOps e infraestructura (Linux, redes, Git, Docker, Kubernetes, CI/CD, cloud, Terraform, Ansible, bases de datos); sirve para chequear qué conceptos de operación toca el caso.
+
+## Sitios de aprendizaje
+
+[The Odin Project](https://www.theodinproject.com/paths): currículo gratuito y abierto de desarrollo web, con lecturas curadas y proyectos para construir; rutas [Foundations](https://www.theodinproject.com/paths/foundations/courses/foundations), [Full Stack JavaScript](https://www.theodinproject.com/paths/full-stack-javascript) y [Full Stack Ruby on Rails](https://www.theodinproject.com/paths/full-stack-ruby-on-rails). Sirve para fundamentos web (HTML, CSS, JavaScript, Git, línea de comandos, Node, bases de datos) y para ver en qué orden se estudian; su currículo vive en [TheOdinProject/curriculum](https://github.com/TheOdinProject/curriculum).
+
+[System Design, an interactive course](https://designed-to-scale.vercel.app/): curso interactivo de diseño de sistemas donde cada idea es un diagrama animado que se recorre paso a paso (balanceo de carga, caché, sharding, consenso, colas, observabilidad y diseños completos, de un servidor a millones de usuarios).
+
+[Full Stack Open](https://fullstackopen.com/en/): curso abierto y gratuito de desarrollo web con JavaScript de la Universidad de Helsinki, en partes con ejercicios (fundamentos web, React, comunicación con el servidor, Node y Express, testing, estado, GraphQL, TypeScript, React Native, CI/CD, contenedores, bases de datos relacionales y Next.js); hay traducción al español.
 
 ## Lenguajes y plataformas
 

@@ -141,6 +141,16 @@ con el primer n ≥ 2 libre. Nunca devuelve una que ya exista."""
 # Puede haber más de uno por bajadas a rutas viejas; sorted para que la elección no dependa del orden del set.
 # Después
 # Puede haber más de uno por bajadas a rutas viejas entonces se ordenan para que la elección no dependa del orden del set.
+
+# Antes
+/**
+ * Borra un lote que nunca tuvo movimientos. Con movimientos se rechaza porque el borrado en cascada
+ * se llevaría sus cortes y el pedido quedaría sin cortes, sin poder finalizarse.
+ */
+# Después
+/**
+ * Si el lote tiene movimientos se rechaza porque el borrado en cascada se llevaría sus cortes entonces el pedido quedaría sin cortes y sin poder finalizarse.
+ */
 ```
 
 Tampoco se usa `→`. La relación se dice con *se convierte en*, *da* o *retorna*. Y si el comentario no lleva una lista de ejemplos, no termina en `:`.

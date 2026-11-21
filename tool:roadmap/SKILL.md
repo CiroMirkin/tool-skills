@@ -13,7 +13,7 @@ El roadmap es una **síntesis aplicada**: no explica un tema en general, sino qu
    - los temas (cada tema grande es una **Parte**);
    - el **caso**: el proyecto concreto, sus entidades y sus números (usuarios, registros, peticiones, dispositivos);
    - lo que el usuario ya sabe, que queda fuera del roadmap;
-   - las **fuentes del usuario**: URLs, repos, PDFs o archivos locales. Si el tema es de desarrollo de software, se suman siempre las **fuentes fijas** de [`fuentes.md`](fuentes.md);
+   - las **fuentes del usuario**: URLs, repos, PDFs o archivos locales. Si el tema es de desarrollo de software, se suman siempre las **referencias** de [`tool:referencias-base`](../tool:referencias-base/referencias.md), repos y sitios;
    - el destino: el que pida el usuario; si no, donde ya guarda sus documentos de estudio, siguiendo su convención de nombres; si no hay ninguna, `roadmap-<tema>.md` en el directorio actual.
 
    Un dato ambiguo ("10 mil por organizar") se interpreta de la forma más razonable y se anota como **supuesto**.
@@ -38,7 +38,7 @@ El roadmap es una **síntesis aplicada**: no explica un tema en general, sino qu
    Hecho cuando cada punto de la lista tiene subsecciones asignadas.
 
 4. **Investigar.** Despachar un subagente **en segundo plano** por Parte, en paralelo; pasarle el caso, los supuestos, la conclusión del paso 2, lo que el usuario ya sabe, el mapa de su Parte y las fuentes del usuario. Cada investigación:
-   - Lee **todas** las fuentes del usuario y recorre las fuentes fijas que tocan su Parte. En un repo o una lista *awesome*, recorrer el índice y abrir las secciones que tocan el caso; anotar el enlace exacto a la sección (con su ancla `#...`), no solo a la raíz del repo.
+   - Lee **todas** las fuentes del usuario y recorre las referencias que tocan su Parte, y sigue la regla de lectura de [`referencias.md`](../tool:referencias-base/referencias.md).
    - Busca en internet lo que falte, prefiriendo **fuentes primarias**: documentación oficial, specs, OWASP, el repo del proyecto. Un artículo secundario solo entra si explica algo que la fuente primaria no.
    - Lleva cada afirmación hasta su **dueño**: la fuente que la define (la doc oficial de PostgreSQL para un comportamiento de PostgreSQL, la spec para un protocolo). Una lista *awesome* o unas notas son el camino, no el dueño: se cita la sección del repo que llevó ahí y también el dueño. Cada dato concreto (un límite, un valor por defecto, un comportamiento) lleva el enlace a su dueño.
    - Comprueba la **vigencia** de cada servicio o herramienta recomendada: si está discontinuado o dejó de aceptar clientes nuevos, se anota con el enlace al aviso oficial y su reemplazo.

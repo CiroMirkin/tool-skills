@@ -37,6 +37,7 @@ Quien lee no conoce el tema. Cada término se **explica**, no se describe: despu
 
 3. **Investigar.** Reunir, en este orden:
    - todas las fuentes del usuario y el `RESOURCES.md` del proyecto si existe;
+   - las **referencias** de [`tool:referencias-base`](../tool:referencias-base/referencias.md) que tocan el tema;
    - las skills del tema, en `.claude/skills` del proyecto o las globales (por ejemplo `cpp-reviewer` para firmware), que aportan criterio pero no se citan como fuente;
    - fuentes propias, buscadas siempre aunque las del usuario parezcan alcanzar: documentación oficial, specs, hojas de datos, el repo del proyecto. Un artículo secundario entra solo si explica algo que la fuente primaria no explica.
 
