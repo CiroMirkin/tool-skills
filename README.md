@@ -10,7 +10,7 @@
 
 </div>
 
-Catorce skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Dieciséis skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -22,10 +22,11 @@ Catorce skills en español, cada una con sus pasos y su criterio de terminado, p
 | `tool:doc-estudio` | Escribe dos `.md` complementarios que enseñan un tema desde cero (fundamentos y avanzado), con repo de pruebas, tres tareas con tests por doc, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:informe-cambios` | **(En revisión)** Escribe un informe de cambios para enviar a un cliente: un `.md`, un PDF general y un PDF por etapa, cada cambio con su porqué, cómo se detectó y qué cambia. |
-| `tool:mini-tuto` | Propone una actividad corta dentro de tu proyecto para entender una tecnología y te guía mientras haces los cambios. |
+| `tool:learn` | **(En etapa de prueba)** Genera un `.html` que te enseña desde cero una parte de tu código o un concepto (por ejemplo, transacciones): diagramas, código real de tu proyecto y de uno ficticio, ejercicios para encontrar errores y una tarea con ayudas. Lo guarda para consultarlo después. |
 | `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
 | `tool:policy` | **(En etapa de prueba)** Prepara los documentos legales para lanzar un repositorio: política de privacidad y de seguridad, `SECURITY.md`, términos, cookies, proveedores, procedimientos y un checklist de trámites, todo a partir de lo que el código hace de verdad. |
 | `tool:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
+| `tool:referencia` | Suma un repo o un sitio (`/tool:referencia <url>`) a la base de referencias de desarrollo que consultan `tool:roadmap`, `tool:learn` y `tool:doc-estudio`. |
 | `tool:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
 | `tool:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, o un vistazo general del área si no tienes uno, con el enlace de cada fuente. |
 | `tool:subtitulos` | Busca, descarga y sincroniza subtítulos para un video local, y verifica contra el audio que encajan. |
@@ -49,7 +50,9 @@ Algunas skills necesitan algo más:
 
 - **`tool:diagrama-hardware`**: Python 3 con `schemdraw` y `matplotlib`. Con [uv](https://docs.astral.sh/uv/) alcanza con `uv run --no-project --with schemdraw --with matplotlib python script.py`. Para simular el circuito usa `ngspice` (`sudo apt install ngspice`); si falta, la skill pregunta antes de instalarlo.
 - **`tool:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
+- **`tool:learn`**: Python 3, [uv](https://docs.astral.sh/uv/) (instala `pygments` al correr) y internet para investigar. Usa las skills `diagram-design` y `humanizer`, y las herramientas para ejecutar el código del tema. Las lecciones se guardan en `tool:learn/memoria/`, que git ignora.
 - **`tool:informe-cambios`**: Node.js con `npm` (instala sus dependencias la primera vez), Python 3 e internet para bajar las fuentes. Usa la skill `humanizer` y `pdftoppm` para revisar los PDF.
+- **`tool:referencias-base`**: no es una skill, es la carpeta con `referencias.md` que leen `tool:roadmap`, `tool:learn`, `tool:doc-estudio` y `tool:referencia`. Si instalas esas por separado, enlaza también esta carpeta.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
 - **`tool:whatsapp`**: Python 3, y OpenWA corriendo (con Docker) con una sesión de WhatsApp vinculada; la primera vez la skill te guía para configurarlo. OpenWA es un cliente no oficial: lee su aviso de riesgo antes de vincular tu número.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
@@ -63,7 +66,6 @@ Escribe el nombre de la skill en Claude Code, o pide la tarea con tus palabras y
 /tool:subtitulos busca subtítulos para este video
 /tool:pdf pasa notas.txt a cuadernillo
 /tool:informe-cambios arma el informe para el cliente
-/tool:mini-tuto cómo ajustar una grilla en este sitio
 ```
 
 > [!NOTE]
