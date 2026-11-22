@@ -17,16 +17,18 @@ El código se copia del archivo, nunca se tipea. Un diagrama se llama `flujo-…
 
 ## Un modelo resuelto
 
-Dentro de cada escalón de `practica`, arriba de la consigna. Muestra la pieza ya escrita, con el idioma de la tecnología, y una nota que lo señala.
+Dentro del peldaño del `concepto` que ilustra, después del párrafo que explica la pieza y antes del siguiente. Cumple el mismo rol que un diagrama: la idea escrita en código, con el idioma de la tecnología. Con un diagrama en el mismo peldaño, van juntos. Cada modelo lleva `id="modelo-N"` y el escalón N lo enlaza. Cada nota empieza con `Línea N`, `Líneas N y M` o `Líneas N a M`: `armar` pone un puntito rojo junto al número de esas líneas.
 
 ```html
-<h4>Antes de empezar, el modelo: una transacción de dos operaciones</h4>
+<p>Por eso un error de negocio se escribe como un <code>throw</code> adentro del callback.</p>
+<h4 id="modelo-2">El modelo: escribir primero y deshacer lanzando un error</h4>
 <p>Una frase: qué hace este código. Es otra operación que la del escalón, escrita igual.</p>
-@@ejemplo:modelo/01-transferir.ts:1-18@@
+@@ejemplo:modelo/02-renombrar-sin-vacio.ts:1-10@@
 <ul>
   <li>Línea 4: <code>tx</code> y no <code>prisma</code>. Solo lo que pasa por <code>tx</code> queda dentro de la transacción.</li>
   <li>Línea 5: <code>findUniqueOrThrow</code> corta la transacción si no existe la fila, sin un chequeo de <code>null</code> aparte.</li>
 </ul>
+<p>El párrafo que sigue, ya con el modelo a la vista.</p>
 ```
 
 ## Leer un fragmento del proyecto
@@ -46,14 +48,15 @@ Dentro de cada escalón de `practica`, arriba de la consigna. Muestra la pieza y
 
 ## Un escalón de práctica
 
-Abre la sección `practica` una tabla pieza a escalón (qué pieza practica cada escalón; los fragmentos del proyecto la usan para declarar `Piezas que usa`). La clase va en la etiqueta: `Ejecutar`, `Completar` o `Escribir`. El dominio va en `data-dominio`: `proyecto` (recorte del dominio real) o `ficticio`.
+Un escalón no lleva código: enlaza su modelo, que vive en el concepto. Abre la sección `practica` una tabla pieza a escalón (qué pieza practica cada escalón; los fragmentos del proyecto la usan para declarar `Piezas que usa`). La clase va en la etiqueta: `Ejecutar`, `Completar` o `Escribir`. El dominio va en `data-dominio`: `proyecto` (recorte del dominio real) o `ficticio`.
 
 ```html
 <div class="escalon" id="escalon-1" data-dominio="proyecto">
   <h3><label><input type="checkbox"> Escalón 1, una transacción de dos operaciones</label></h3>
   <p><span class="etiqueta">Completar</span> Pieza nueva: leer y escribir en la misma transacción.</p>
+  <p>Modelo en el concepto: <a href="#modelo-1">una transacción de dos operaciones</a>.</p>
   <p>Qué hacer, en una o dos frases, y en qué archivo (<code>practica/01-stock-simple/stock.ts</code>).</p>
-  <p class="comprobacion">Comprobá con <code>npx vitest run practica/01-stock-simple</code>. Al empezar está en red: <code>esperaba 7, recibió 10</code>.</p>
+  <p class="comprobacion">Comprobá con <code>npx vitest run practica/01-stock-simple</code>.</p>
   <details class="pista"><summary>Ayuda 1: releé</summary>
     <p>Releé <a href="#concepto">el concepto</a>, el peldaño de la transacción interactiva.</p>
   </details>

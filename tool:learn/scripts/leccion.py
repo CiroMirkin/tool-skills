@@ -99,6 +99,31 @@ def bloque_svg(base, nombre):
     return f'<figure class="diagrama" data-tipo="{tipo}">\n{svg.strip()}{leyenda}\n</figure>'
 
 
+def marcar_lineas(texto):
+    """Pone un puntito rojo en las líneas de cada modelo que las notas de abajo nombran (Línea 8, Líneas 6 y 7, Líneas 7 a 9)."""
+
+    def lineas_citadas(notas):
+        citadas = set()
+        for li in re.findall(r"<li>(.*?)</li>", notas, re.S):
+            m = re.match(r"\s*Líneas?\s+(\d+)(?:\s+(?:y|a)\s+(\d+))?", li)
+            if not m:
+                continue
+            a, b = int(m.group(1)), int(m.group(2) or m.group(1))
+            citadas.update(range(a, b + 1) if " a " in m.group(0) else {a, b})
+        return citadas
+
+    def marcar(m):
+        citadas = lineas_citadas(m.group(2))
+        figura = re.sub(
+            r'<span class="l(?: marca)?" data-n="(\d+)">',
+            lambda x: f'<span class="l{" marca" if int(x.group(1)) in citadas else ""}" data-n="{x.group(1)}">',
+            m.group(1),
+        )
+        return figura + m.group(2)
+
+    return re.sub(r'(<figure class="codigo"[^>]*data-ruta="modelo/.*?</figure>)(\s*<ul>.*?</ul>)', marcar, texto, flags=re.S)
+
+
 def armar(fuente, salida, proyecto, ejemplo, diagramas):
     texto = fuente.read_text(encoding="utf-8")
 
@@ -111,7 +136,7 @@ def armar(fuente, salida, proyecto, ejemplo, diagramas):
             sys.exit(f"falta --{tipo} para {spec}")
         return bloque_codigo(tipo, base, spec, proyecto)
 
-    armado = INCLUSION.sub(sustituir, texto)
+    armado = marcar_lineas(INCLUSION.sub(sustituir, texto))
     armado = armado.replace("/*PYGMENTS*/", css_resaltado())
     salida.write_text(armado, encoding="utf-8")
     print(salida)
@@ -240,11 +265,17 @@ def comprobar(ruta, con_enlaces):
             p.append(f"el escalón {i} necesita un <p class=\"comprobacion\"> con el comando")
         if not re.search(r'class="etiqueta">(Ejecutar|Completar|Escribir)<', esc):
             p.append(f"el escalón {i} necesita su clase (Ejecutar, Completar o Escribir)")
-        if not re.search(r'<figure class="codigo"[^>]*data-ruta="modelo/', esc):
-            p.append(f"el escalón {i} necesita su modelo resuelto (un fragmento de modelo/) antes de la tarea")
-        sin_modelo = re.sub(r'<figure class="codigo"[^>]*data-ruta="modelo/.*?</figure>', "", esc, flags=re.S)
-        if "<pre" in sin_modelo or 'class="codigo"' in sin_modelo or "@@" in sin_modelo:
-            p.append(f"el escalón {i} lleva código que no es el modelo: la solución queda fuera de la lección")
+        if not re.search(r'href="#modelo-\d+"', esc):
+            p.append(f"el escalón {i} necesita un enlace a su modelo, que vive en el concepto (href=\"#modelo-N\")")
+        if "<pre" in esc or 'class="codigo"' in esc or "@@" in esc:
+            p.append(f"el escalón {i} lleva código: el modelo vive en el concepto y la solución queda fuera de la lección")
+    concepto = seccion(texto, "concepto")
+    ids_modelo = set(re.findall(r'id="(modelo-\d+)"', concepto))
+    modelos = [a for c, a in r.figuras if "codigo" in c.split() and a.get("data-ruta", "").startswith("modelo/")]
+    if len(modelos) < len(escalones) or len(ids_modelo) < len(escalones):
+        p.append(f"el concepto trae {len(modelos)} modelos con {len(ids_modelo)} anclas, debe haber uno por escalón ({len(escalones)}), cada uno con su id=\"modelo-N\"")
+    for destino in set(re.findall(r'href="#(modelo-\d+)"', practica)) - ids_modelo:
+        p.append(f"un escalón enlaza a #{destino} y el concepto no tiene ese modelo")
     if "<table" not in practica:
         p.append("la práctica necesita la tabla pieza a escalón")
     proy = seccion(texto, "codigo-proyecto")

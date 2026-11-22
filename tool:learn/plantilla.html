@@ -7,12 +7,12 @@
 <style>
 :root {
   --fondo: #fbfaf7; --panel: #f1efe9; --tinta: #23252b; --suave: #5d6168; --linea: #dcd9d0;
-  --acento: #b3441f; --ok: #2f7a4b; --aviso: #9a6a00; --codigo: #f4f2ec;
+  --acento: #b3441f; --ok: #2f7a4b; --aviso: #9a6a00; --codigo: #f4f2ec; --rojo: #d92d20;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --fondo: #17181b; --panel: #202226; --tinta: #e8e6e1; --suave: #a2a5ab; --linea: #34373d;
-    --acento: #f08a62; --ok: #6cc08b; --aviso: #e0b04a; --codigo: #1d1f23;
+    --acento: #f08a62; --ok: #6cc08b; --aviso: #e0b04a; --codigo: #1d1f23; --rojo: #ff6b5e;
   }
 }
 * { box-sizing: border-box; }
@@ -46,6 +46,9 @@ figcaption { font-size: 0.88rem; color: var(--suave); }
   width: max-content; min-width: 100%; }
 .l::before { content: attr(data-n); display: inline-block; width: 3.2ch; margin: 0 1.4ch 0 1rem;
   text-align: right; color: var(--suave); opacity: 0.7; user-select: none; }
+.l.marca { position: relative; }
+.l.marca::after { content: ""; position: absolute; left: 0.4rem; top: 0.52em; width: 0.5em; height: 0.5em;
+  border-radius: 50%; background: var(--rojo); }
 .diagrama svg { width: 100%; height: auto; display: block; }
 .nota, .pregunta, .ojo { margin: 1.3rem 0; padding: 0.8rem 1rem; border-left: 3px solid var(--linea);
   background: var(--panel); border-radius: 0 8px 8px 0; }
