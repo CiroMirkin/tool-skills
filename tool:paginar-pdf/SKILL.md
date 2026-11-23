@@ -15,7 +15,7 @@ La salida por defecto es `<entrada>-paginado.pdf`, junto a la entrada.
 
 ## Orden
 
-Cada hoja lleva cuatro páginas: frente `[1, 3]`, dorso `[2, 4]`; la hoja siguiente sigue con `[5, 7]` y `[6, 8]`. Al imprimir doble faz volteando por el **borde largo**, la 1 queda detrás de la 2 y la 3 detrás de la 4, y apilando las hojas se lee 1, 2, 3, 4, 5... Si el total no es múltiplo de 4, el hueco final queda en blanco.
+Cada hoja lleva cuatro páginas: frente `[1, 3]`, dorso `[4, 2]`; la hoja siguiente sigue con `[5, 7]` y `[8, 6]`. Al imprimir doble faz volteando por el **borde corto** de la hoja apaisada (el diálogo suele llamarlo "borde largo"), la 1 queda detrás de la 2 y la 3 detrás de la 4, y apilando las hojas se lee 1, 2, 3, 4, 5... Si el total no es múltiplo de 4, el hueco final queda en blanco.
 
 ## Recorte
 
@@ -23,8 +23,8 @@ Solo con `--recortar`, y únicamente si el usuario lo pide, no por defecto. Quit
 
 ## Entrega
 
-Cada página se toma solo dentro de su área de página (MediaBox): las marcas de corte y registro de imprenta, que viven afuera, no se imprimen. Entre las dos páginas va una línea vertical gris oscuro de 1 pt, de borde a borde, para cortar la hoja después de imprimirla. Cada página se escala para entrar en su mitad de la cara, centrada y con margen, sea cual sea su tamaño o rotación original. Al entregar, decirle al usuario que imprima doble faz con volteo por el borde largo, y que si la 2 aparece boca abajo o espejada respecto de la 1, pruebe con el borde corto.
+Cada página se toma solo dentro de su área de página (MediaBox): las marcas de corte y registro de imprenta, que viven afuera, no se imprimen. Entre las dos páginas va una línea vertical gris oscuro de 1 pt, de borde a borde, para cortar la hoja después de imprimirla. Cada página se escala para entrar en su mitad de la cara, centrada y con margen, sea cual sea su tamaño o rotación original. Al entregar, decirle al usuario que imprima doble faz con volteo por el borde corto de la hoja apaisada ("borde largo" en el diálogo de impresión), y que si la 2 aparece boca abajo respecto de la 1, pruebe con el otro borde.
 
 ## Revisión
 
-Antes de entregar, pasar las dos primeras caras a imagen (`pdftoppm -r 40 -png -f 1 -l 2`) y confirmar que la cara 1 muestra las páginas 1 y 3, y la cara 2 las páginas 2 y 4.
+Antes de entregar, pasar las dos primeras caras a imagen (`pdftoppm -r 40 -png -f 1 -l 2`) y confirmar que la cara 1 muestra las páginas 1 y 3, y la cara 2 las páginas 4 y 2 (en ese orden, de izquierda a derecha).

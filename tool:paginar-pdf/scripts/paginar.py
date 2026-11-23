@@ -5,7 +5,7 @@
 
   uv run paginar.py <entrada.pdf> [--recortar] [-o salida.pdf]
 
-Hoja k (de 0): frente [4k+1, 4k+3], dorso [4k+2, 4k+4]. Si faltan paginas para completar
+Hoja k (de 0): frente [4k+1, 4k+3], dorso [4k+4, 4k+2] (al voltear la hoja por el borde corto, la 1 queda detras de la 2). Si faltan paginas para completar
 la ultima hoja, el hueco queda en blanco.
 
 De cada pagina se toma solo lo que cae dentro de su area de pagina (MediaBox), asi las marcas de
@@ -73,7 +73,7 @@ def main():
 
     out = pymupdf.open()
     for k in range(0, total, 4):
-        for izq, der in ((k, k + 2), (k + 1, k + 3)):
+        for izq, der in ((k, k + 2), (k + 3, k + 1)):
             cara = out.new_page(width=W, height=H)
             colocar(cara, doc, izq, 0, areas)
             colocar(cara, doc, der, 1, areas)

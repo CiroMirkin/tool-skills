@@ -25,11 +25,11 @@ uv run tool:paginar-pdf/scripts/paginar.py libro.pdf --recortar -o libro-grande.
 
 ## Cómo sale
 
-- Cada hoja lleva cuatro páginas: frente `[1, 3]`, dorso `[2, 4]`; luego `[5, 7]` y `[6, 8]`. Si el total no es múltiplo de 4, el hueco final queda en blanco.
+- Cada hoja lleva cuatro páginas: frente `[1, 3]`, dorso `[4, 2]`; luego `[5, 7]` y `[8, 6]`. Si el total no es múltiplo de 4, el hueco final queda en blanco.
 - Entre las dos páginas hay una línea vertical gris oscuro de 1 pt, para cortar la hoja después de imprimirla.
 - Las marcas de corte y registro de imprenta no se imprimen.
 - Cada página se escala para entrar en su mitad, sea cual sea su tamaño original.
 
 ## Imprimir
 
-Doble faz, volteando por el **borde largo**: la 1 queda detrás de la 2 y la 3 detrás de la 4. Si la 2 sale boca abajo respecto de la 1, prueba con el borde corto.
+Doble faz, volteando por el **borde corto** de la hoja apaisada (en el diálogo de impresión suele figurar como "borde largo", porque se piensa en vertical): la 1 queda detrás de la 2 y la 3 detrás de la 4. Si la 2 sale boca abajo respecto de la 1, prueba con el otro borde.
