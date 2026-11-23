@@ -17,7 +17,8 @@ Diecisiete skills en español, cada una con sus pasos y su criterio de terminado
 | Skill | Qué hace |
 |---|---|
 | `tool:a3` | **(En etapa de prueba)** Escribe un A3 al estilo Toyota: el problema, su causa, la contramedida, el plan y el seguimiento en una página, como alternativa corta a un spec. |
-| `tool:audit-tests` | **(En etapa de prueba)** Audita tests con mutantes y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
+| `tool:test-audit` | **(En etapa de prueba)** Auditoría profunda y manual de tests con mutantes y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
+| `tool:test-review` | Revisión rápida y automática al planear y al escribir tests: asegura TDD, FIRST y cobertura de las reglas de negocio, y corrige los que no protegen nada, están atados al cómo, abusan de mocks, son complejos o tienen nombre técnico. |
 | `tool:diagrama-hardware` | Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG con schemdraw. Basada en `schemdraw-circuit-generator` de takazudo/claude-resources. |
 | `tool:doc-estudio` | Escribe dos `.md` complementarios que enseñan un tema desde cero (fundamentos y avanzado), con repo de pruebas, tres tareas con tests por doc, diagramas, quiz y fuentes. |
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |

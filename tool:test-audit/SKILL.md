@@ -1,0 +1,35 @@
+---
+name: tool:test-audit
+description: Auditoría profunda y manual de tests, con suite en varios órdenes, mutantes y refactores en una copia; señala qué no protege nada, qué es frágil y qué quedó sin test.
+disable-model-invocation: true
+---
+
+# Auditar tests (deep)
+
+> **En etapa de prueba.** El reporte lo aclara en su primera línea, para que sus hallazgos se revisen con más cuidado.
+
+La vara, las categorías de lectura (*Inútil*, *Frágil*, *Uso incorrecto de mocks*, *Test complejo*, *Nombre técnico*, *No cumple FIRST*) y el criterio de refactor viven en `tool:test-review`: invocarla antes de empezar y usarla tal cual. Acá se suma lo que solo aparece corriendo cosas: mutantes, orden, refactores y huecos.
+
+## Alcance
+
+Lo que el usuario nombre (carpeta, módulo, archivos, rama, PR). Si no nombra nada, los tests del diff sin commitear; si está limpio, los del último commit; si ahí tampoco hay tests, preguntar.
+
+## Pasos
+
+1. **Correr la suite** en una copia del proyecto en el scratchpad, con sus dependencias instaladas de forma normal, para que el árbol del usuario no se toque; todos los pasos que corren algo usan esa copia. Un rojo acá se diagnostica antes de seguir: si es del entorno se arregla o se anota lo que queda afuera. Corridas: normal (anotando los tests más lentos), en orden aleatorio (`vitest --sequence.shuffle`, `pytest --random-order`), cada archivo por separado, en paralelo forzado con más workers que núcleos (`--maxWorkers=4`, `pytest -n 4`, porque el valor por defecto depende de la máquina y puede esconder el choque), y con el reloj de todo el proceso adelantado dos y tres años. Lo que cambia de resultado entre corridas va a *No cumple FIRST* (de `tool:test-review`), citando la corrida. Hecho cuando hay línea base en verde y las cinco corridas tienen resultado, o quedó anotado por qué no se pudo correr (entonces los mutantes se razonan leyendo y el reporte lo dice).
+2. **Ubicar las reglas de negocio** del alcance en casos de uso, `GLOSSARY.md`, ADRs y specs. Si no están definidas, armar un cuestionario con las skills `matt:grilling` y `matt:domain-modeling` (el equivalente a `matt:grill-with-docs`, que solo se dispara a mano) y responderlo con el usuario antes de seguir. El código muestra lo que el sistema hace, y la regla la confirma el usuario. Hecho cuando hay una lista de reglas, cada una con su fuente o la respuesta del usuario.
+3. **Leer cada test junto al código que protege** y clasificarlo con las categorías de `tool:test-review` y las de abajo; un test puede caer en más de una. Para cada candidato a *Inútil*, buscar también el mejor motivo para quedárselo (`git log` del test: ¿es regresión de un incidente?) y decirlo si existe. Hecho cuando cada test del alcance tiene categoría.
+4. **Mutar** primero el código que aplica las reglas de negocio: un cambio chico, plausible y equivocado (invertir una comparación, correr un borde, cambiar una rama, quitar un chequeo de null), y correr la suite. En los tests con mocks, además, borrar el código de producción, total o parcialmente: el test tiene que fallar. Un test con mocks que sigue en verde con el código borrado es *Verde sin el código*. Si hay herramienta de mutación configurada, correrla sobre el alcance; si no, nombrar una vez en el reporte la que encaja con el stack (Stryker en JS/TS, mutmut en Python, PITest en JVM, cargo-mutants en Rust, Infection en PHP) sin instalarla. Si el mutante se corre con un script, primero va un control sin mutar en verde, y una salida ilegible es un error y no una muerte. Un **muerto** cita el test que lo mató. Un **vivo** se clasifica: **equivalente** si ninguna entrada real muestra la diferencia, y se descarta; *Mentiroso* si hay un test que promete eso; *Hueco* si ninguno lo mira. Si un nivel de la suite no se corrió, el vivo lo dice. Hecho cuando cada módulo de valor tiene al menos un mutante probado y cada uno tiene resultado.
+5. **Refactorizar** en la misma copia el código de esos módulos sin cambiar su comportamiento (extraer una función, renombrar algo interno, partir un módulo, reordenar llamadas internas, llamar a una dependencia de otra forma con el mismo resultado), y correr sus tests. Cada test que se pone rojo es **Frágil**, con ese refactor como evidencia. Hecho cuando cada módulo de valor tiene al menos un refactor probado.
+6. **Mirar la forma**: contar tests por nivel (unit, integración, e2e) y buscar lo que solo se detecta en el nivel caro. Hecho cuando hay conteo por nivel y, si la forma está mal, tests concretos que podrían bajar de nivel y cómo sería el test más barato.
+7. **Buscar los huecos**: primero cada regla de la lista contra la suite, y después ramas, errores, bordes y validaciones del código. Priorizar por costo: caminos de error, bordes, bugs ya arreglados sin test de regresión (`git log --grep=fix`), y concurrencia o fallos parciales. Hecho cuando cada comportamiento que importa tiene test o propuesta de test.
+8. **Buscar el workflow automático**: si algo corre los tests sin que nadie lo pida (`.github/workflows`, `.gitlab-ci.yml`, hook de pre-push). Si no existe, o deja afuera un nivel de la suite, proponer uno usando los comandos reales del proyecto. Hecho cuando quedó citado el que existe y qué niveles corre, o el reporte trae la propuesta con el archivo completo, que se crea recién con aprobación.
+9. **Reportar**, agrupado por categoría. Cada hallazgo lleva un id correlativo en todo el reporte (T1, T2…, sin reiniciar por categoría) para que el usuario los apruebe por id, el `archivo:línea` del test, el `archivo:línea` del código que protege o debería proteger, y una oración que se entienda sin haber leído esta skill. Al final, los mutantes probados y la forma. Sin cita no hay hallazgo.
+
+Aplicar cambios recién cuando el usuario los apruebe. Al borrar un duplicado, comprobar antes que el test que queda cubre todo lo del borrado.
+
+## Categorías propias
+
+- **Se queda**: hay un cambio dañino concreto que lo pone rojo. No va al reporte salvo en el conteo.
+- **Mentiroso** → fortalecer: parece proteger algo y no lo nota si se rompe. Solo con evidencia: un mutante **vivo** sobre lo que el test promete, o un assert más débil que lo que promete el nombre (`rechaza_email_invalido` que solo mira `status != 200`, y un 500 también pasa).
+- **Hueco** → agregar: salió del paso 7. Nombre en lenguaje de negocio, entrada, resultado esperado y junto a qué test va. Tiene que pasar la misma vara que los demás, y se escribe antes que el arreglo para verlo rojo.
