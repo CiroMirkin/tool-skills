@@ -556,6 +556,10 @@ def story_from(text, body, head, sub, title_style, quote, figure, table, code, p
             story.append(Head(inline(line), body))
         else:
             story.append(Block(inline(line), body))
+    # el parrafo que presenta un diagrama va pegado arriba de el
+    for i in range(1, len(story)):
+        if isinstance(story[i], Figures) and type(story[i - 1]) is Block and not getattr(story[i - 1], "bulletText", None):
+            story[i - 1].__class__ = Head
     if simple:
         # el parrafo de entrada de una seccion que cae justo antes de otro titulo va pegado a ese titulo
         for i in range(2, len(story)):
