@@ -1,6 +1,6 @@
 ---
 name: tool:review-comments
-description: Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. Usar cuando el usuario pida revisar, limpiar o auditar comentarios.
+description: Revisa los comentarios del código, corrige solos los que no piden criterio y señala los que sí (cuáles mienten y dónde falta uno). Usar cuando el usuario pida revisar, limpiar o auditar comentarios, y al terminar de editar código que agregó o tocó comentarios.
 ---
 
 # Revisar comentarios
@@ -11,18 +11,27 @@ El código ya dice *qué* hace. Un comentario se gana su lugar contando lo **inv
 
 Lo que el usuario nombre (archivo, carpeta, commit, rama). Si no nombra nada, el diff sin commitear; si está limpio, el último commit.
 
+Al terminar de editar código, el alcance son los comentarios que el propio diff agregó o tocó, y se corre sin que el usuario lo pida.
+
 ## Pasos
 
 1. **Leer cada comentario del alcance junto al código que acompaña** (incluye docstrings y cabeceras). Hecho cuando cada uno quedó clasificado en una de las categorías de abajo.
 2. **Buscar los huecos**: código cuyo motivo es invisible y no tiene comentario (número mágico, `sleep`, orden de líneas que importa, `catch` que traga errores, workaround, valor de config externo, regex cuyo nombre o validación cercana no dicen qué valida). Para cada uno, buscar el motivo en `git log -L`/`git blame`, el commit, la issue o el ADR que lo introdujo. Hecho cuando cada hueco tiene su motivo encontrado o quedó marcado como *pregunta para el usuario*: el motivo se cita, no se inventa.
-3. **Reportar**, agrupado por categoría. Cada hallazgo lleva un id correlativo en todo el reporte (C1, C2…, sin reiniciar por categoría) para que el usuario los apruebe por id, y `archivo:línea`. Debajo va un bloque de código con el comentario actual y, en la línea siguiente, el propuesto:
+3. **Aplicar lo mecánico**: cada hallazgo mecánico se edita directo, sin pedir aprobación. Hecho cuando ninguno queda sin aplicar.
+4. **Reportar lo que pide criterio**, agrupado por categoría. Cada hallazgo lleva un id correlativo en todo el reporte (C1, C2…, sin reiniciar por categoría) para que el usuario los apruebe por id, y `archivo:línea`. Debajo va un bloque de código con el comentario actual y, en la línea siguiente, el propuesto:
 
    ```tsx
    // 7rem = header h-16 + py-6 del layout; solo la tabla scrollea
    // 7rem = header h-16 + py-6 del layout (Alto fijo para que solo scrollee la tabla)
    ```
 
-   Si la propuesta es borrar, el bloque lleva solo el comentario actual y abajo dice *borrar*. En un hueco, el bloque lleva el código y, abajo, el comentario nuevo o la pregunta. En una sección, el bloque lleva el separador y, abajo, el archivo propuesto. El código entra en el bloque solo cuando también cambia (ej. un nombre mejor en vez de un eco). Aplicar los cambios recién cuando el usuario los apruebe.
+   En un hueco, el bloque lleva el código y, abajo, el comentario nuevo o la pregunta. En una sección, el bloque lleva el separador y, abajo, el archivo propuesto. El código entra en el bloque solo cuando también cambia (ej. un nombre mejor en vez de un eco). Lo que pide criterio se aplica recién cuando el usuario lo apruebe.
+   Al final, una línea con cuántos comentarios se corrigieron solos y en qué archivos.
+
+## Mecánico y criterio
+
+- **Mecánico** (se aplica solo): eco, mezcla, confuso, ponytail y mentira cuando el código deja claro cuál es la verdad (parámetro que ya no existe, TODO ya resuelto). Todo lo que el comentario dice queda igual o sale porque el código ya lo dice.
+- **Criterio** (espera al usuario): hueco, sección, una mentira donde no se sabe si miente el comentario o el código, y todo cambio que toque código.
 
 ## Categorías
 
