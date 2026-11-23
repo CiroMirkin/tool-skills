@@ -10,7 +10,7 @@
 
 </div>
 
-Dieciséis skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Diecisiete skills en español, cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -23,6 +23,7 @@ Dieciséis skills en español, cada una con sus pasos y su criterio de terminado
 | `tool:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
 | `tool:informe-cambios` | **(En revisión)** Escribe un informe de cambios para enviar a un cliente: un `.md`, un PDF general y un PDF por etapa, cada cambio con su porqué, cómo se detectó y qué cambia. |
 | `tool:learn` | **(En etapa de prueba)** Genera un `.html` que te enseña desde cero una parte de tu código o un concepto (por ejemplo, transacciones): diagramas, código real de tu proyecto y de uno ficticio, ejercicios para encontrar errores y una tarea con ayudas. Lo guarda para consultarlo después. |
+| `tool:paginar-pdf` | Acomoda un PDF existente de a dos páginas por cara en hojas A4 apaisadas, ordenado para imprimir doble faz, con línea de corte y recorte de márgenes opcional. |
 | `tool:pdf` | Convierte un archivo de texto en PDF: dos columnas justificado, una columna o cuadernillo para imprimir, con diagramas en grises o a color. |
 | `tool:policy` | **(En etapa de prueba)** Prepara los documentos legales para lanzar un repositorio: política de privacidad y de seguridad, `SECURITY.md`, términos, cookies, proveedores, procedimientos y un checklist de trámites, todo a partir de lo que el código hace de verdad. |
 | `tool:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
@@ -54,6 +55,7 @@ Algunas skills necesitan algo más:
 - **`tool:informe-cambios`**: Node.js con `npm` (instala sus dependencias la primera vez), Python 3 e internet para bajar las fuentes. Usa la skill `humanizer` y `pdftoppm` para revisar los PDF.
 - **`tool:referencias-base`**: no es una skill, es la carpeta con `referencias.md` que leen `tool:roadmap`, `tool:learn`, `tool:doc-estudio` y `tool:referencia`. Si instalas esas por separado, enlaza también esta carpeta.
 - **`tool:pdf`**: [uv](https://docs.astral.sh/uv/), que instala sus dependencias al correr. También usa `pdftoppm` para revisar el resultado.
+- **`tool:paginar-pdf`**: [uv](https://docs.astral.sh/uv/), que instala PyMuPDF al correr. También usa `pdftoppm` para revisar el resultado.
 - **`tool:whatsapp`**: Python 3, y OpenWA corriendo (con Docker) con una sesión de WhatsApp vinculada; la primera vez la skill te guía para configurarlo. OpenWA es un cliente no oficial: lee su aviso de riesgo antes de vincular tu número.
 - **`tool:subtitulos`**: Linux x86_64. La primera vez instala uv, ffsubsync y ffmpeg en `~/.cache/subtitulos`, sin sudo.
 
