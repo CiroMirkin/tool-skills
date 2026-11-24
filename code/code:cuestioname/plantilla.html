@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO}}</title>
+<style>
+  :root { --tinta:#1f2328; --suave:#59636e; --fondo:#fbfaf7; --papel:#fff; --linea:#d8d4ca; --ok:#1a7f37; --mal:#cf222e; --acento:#0b5cad; --aviso:#fff8e1; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--fondo); color:var(--tinta); font:18px/1.65 Georgia, "Times New Roman", serif; }
+  main { max-width:46rem; margin:0 auto; padding:2rem 1.1rem 5rem; }
+  h1 { font-size:2rem; line-height:1.2; margin:0 0 .4rem; }
+  h2 { font-size:1.45rem; margin:3rem 0 .8rem; padding-top:.6rem; border-top:1px solid var(--linea); }
+  h3 { font-size:1.1rem; margin:1.6rem 0 .4rem; }
+  p, li { max-width:42rem; }
+  .sub { color:var(--suave); margin:0 0 1.5rem; }
+  nav.toc { background:var(--papel); border:1px solid var(--linea); padding:.8rem 1.2rem; margin:1.5rem 0; }
+  nav.toc ol { margin:.3rem 0; padding-left:1.2rem; }
+  a { color:var(--acento); }
+  code { font:0.88em ui-monospace, Menlo, Consolas, monospace; background:#efece4; padding:.1em .3em; }
+  pre { font:0.85rem/1.5 ui-monospace, Menlo, Consolas, monospace; white-space:pre; overflow-x:auto; background:#16181d; color:#e8e6df; padding:.9rem 1rem; margin:1rem 0; }
+  pre code { background:none; padding:0; }
+  .callout { background:var(--aviso); border-left:4px solid #d9a400; padding:.7rem 1rem; margin:1.2rem 0; }
+  .callout b:first-child { display:block; }
+  details.fondo { background:var(--papel); border:1px solid var(--linea); padding:.6rem 1.1rem; margin:1rem 0; }
+  details.fondo summary { cursor:pointer; font-weight:bold; }
+  .diagrama { display:flex; flex-wrap:wrap; gap:.6rem; align-items:stretch; margin:1.2rem 0; font:0.9rem/1.4 system-ui, sans-serif; }
+  .caja { flex:1 1 9rem; background:var(--papel); border:1px solid var(--tinta); padding:.55rem .7rem; }
+  .caja small { display:block; color:var(--suave); }
+  .flecha { align-self:center; color:var(--suave); font-size:1.2rem; }
+
+  .progreso { display:flex; gap:.5rem; margin:1rem 0 1.4rem; font:0.9rem system-ui, sans-serif; align-items:center; flex-wrap:wrap; }
+  .punto { width:2rem; height:2rem; border-radius:50%; border:2px solid var(--linea); display:grid; place-items:center; background:var(--papel); }
+  .punto.actual { border-color:var(--acento); }
+  .punto.hecha { background:var(--ok); border-color:var(--ok); color:#fff; }
+  .tarjeta { background:var(--papel); border:1px solid var(--linea); margin:1rem 0; }
+  .tarjeta header { padding:1rem 1.2rem .6rem; border-bottom:1px solid var(--linea); }
+  .tarjeta header small { display:block; color:var(--suave); font:0.85rem system-ui, sans-serif; margin-bottom:.3rem; }
+  .opcion { display:flex; gap:.8rem; width:100%; text-align:left; background:none; border:0; border-top:1px solid var(--linea); padding:.85rem 1.2rem; font:inherit; color:inherit; cursor:pointer; }
+  .opcion:first-of-type { border-top:0; }
+  .opcion:hover:not(:disabled) { background:#f4f1e9; }
+  .opcion:disabled { cursor:default; }
+  .letra { flex:none; width:1.7rem; height:1.7rem; border-radius:50%; border:1px solid var(--suave); display:grid; place-items:center; font:0.8rem system-ui, sans-serif; margin-top:.15rem; }
+  .opcion.correcta .letra { background:var(--ok); border-color:var(--ok); color:#fff; }
+  .opcion.elegida.incorrecta .letra { background:var(--mal); border-color:var(--mal); color:#fff; }
+  .opcion.apagada { color:var(--suave); }
+  .porque { display:block; margin-top:.4rem; font-size:.95rem; }
+  .porque.si { color:var(--ok); } .porque.no { color:var(--mal); }
+  .porque span { color:var(--tinta); }
+  .repaso { border-top:1px solid var(--linea); padding:1rem 1.2rem; background:#fdf4f4; }
+  .repaso h3 { margin-top:0; }
+  .acciones { padding:.9rem 1.2rem; border-top:1px solid var(--linea); display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; font:0.95rem system-ui, sans-serif; }
+  button.accion { font:inherit; background:var(--acento); color:#fff; border:0; padding:.55rem 1.1rem; cursor:pointer; }
+  .cierre { background:var(--papel); border:1px solid var(--linea); padding:1rem 1.3rem; }
+  [hidden] { display:none !important; }
+  @media (max-width:600px) { body { font-size:17px; } h1 { font-size:1.6rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{TITULO}}</h1>
+  <p class="sub">{{SUBTITULO: una frase que diga qué parte del sistema salió sorteada y de qué proyecto}}</p>
+
+  <nav class="toc" aria-label="Contenido">
+    <b>Contenido</b>
+    <ol>
+      <li><a href="#contexto">Contexto</a></li>
+      <li><a href="#cuestionario">Cuestionario</a></li>
+      <li><a href="#cierre">Cierre</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="contexto">Contexto</h2>
+  <!-- Contexto: una página como máximo, con la prosa de Kleppmann: del problema que resuelve esta parte al mecanismo. Un diagrama HTML con datos de ejemplo (.diagrama, .caja, .flecha). Las respuestas de las preguntas no pueden leerse acá de forma literal. -->
+  {{CONTEXTO}}
+
+  <h2 id="cuestionario">Cuestionario</h2>
+  <p>Son cuatro preguntas. Cada respuesta incorrecta trae su explicación y se vuelve a preguntar, con otros datos, hasta acertar.</p>
+  <div class="progreso" id="progreso" aria-label="Progreso"></div>
+  <div id="pregunta"></div>
+
+  <h2 id="cierre">Cierre</h2>
+  <div class="cierre" id="resultado">Responde las cuatro preguntas para ver el cierre.</div>
+</main>
+
+<script>
+/*
+  PREGUNTAS: exactamente cuatro objetos. Cada uno:
+    tema:   etiqueta corta de lo que prueba la pregunta
+    variantes: lista de 2 o más { enunciado (HTML), opciones: [{ texto (HTML), correcta (bool), porque (HTML) }] }
+               la primera es la pregunta; las siguientes preguntan lo mismo con otros datos o en otro caso.
+               Cada variante tiene 4 opciones y una sola correcta. Todas llevan "porque".
+    repaso: { titulo, html } la explicación del mecanismo, con el fragmento de código real citado en <pre><code>.
+*/
+const PREGUNTAS = {{PREGUNTAS}};
+
+const estado = { i: 0, v: 0, intentos: PREGUNTAS.map(() => 0), pasoAlPrimero: PREGUNTAS.map(() => null), elegida: null };
+const $ = (id) => document.getElementById(id);
+const LETRAS = ['A', 'B', 'C', 'D'];
+
+function mezclar(lista) {
+  const a = lista.map((x, k) => ({ x, k }));
+  for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; }
+  return a.map((e) => e.x);
+}
+
+function dibujarProgreso() {
+  $('progreso').innerHTML = PREGUNTAS.map((p, k) => {
+    const hecha = estado.pasoAlPrimero[k] !== null;
+    const clase = hecha ? 'hecha' : k === estado.i ? 'actual' : '';
+    return `<span class="punto ${clase}">${hecha ? '✓' : k + 1}</span>`;
+  }).join('') + `<span>Pregunta ${Math.min(estado.i + 1, PREGUNTAS.length)} de ${PREGUNTAS.length}</span>`;
+}
+
+function dibujarPregunta() {
+  dibujarProgreso();
+  const p = PREGUNTAS[estado.i];
+  const variante = p.variantes[estado.v % p.variantes.length];
+  estado.elegida = null;
+  estado.opciones = mezclar(variante.opciones);
+  const reintento = estado.intentos[estado.i] > 0;
+  $('pregunta').innerHTML = `
+    <section class="tarjeta">
+      <header><small>${p.tema}${reintento ? ', otra vez con otros datos' : ''}</small><div>${variante.enunciado}</div></header>
+      <div id="opciones">${estado.opciones.map((o, k) => `
+        <button class="opcion" data-k="${k}"><span class="letra">${LETRAS[k]}</span><span>${o.texto}<span class="porque" hidden></span></span></button>`).join('')}
+      </div>
+      <div id="repaso" class="repaso" hidden></div>
+      <div id="acciones" class="acciones" hidden></div>
+    </section>`;
+  document.querySelectorAll('.opcion').forEach((b) => b.addEventListener('click', () => responder(Number(b.dataset.k))));
+}
+
+function responder(k) {
+  if (estado.elegida !== null) return;
+  estado.elegida = k;
+  const p = PREGUNTAS[estado.i];
+  const acerto = estado.opciones[k].correcta;
+  document.querySelectorAll('.opcion').forEach((b, n) => {
+    const o = estado.opciones[n];
+    b.disabled = true;
+    const mostrar = n === k || o.correcta;
+    if (o.correcta) b.classList.add('correcta');
+    if (n === k) b.classList.add('elegida');
+    if (n === k && !o.correcta) b.classList.add('incorrecta');
+    if (!mostrar) b.classList.add('apagada');
+    const porque = b.querySelector('.porque');
+    if (mostrar) {
+      porque.hidden = false;
+      porque.className = 'porque ' + (o.correcta ? 'si' : 'no');
+      porque.innerHTML = (o.correcta ? (n === k ? 'Correcto. ' : 'Esta era la correcta. ') : 'No es correcto. ') + `<span>${o.porque}</span>`;
+    }
+  });
+  const acc = $('acciones');
+  acc.hidden = false;
+  if (acerto) {
+    if (estado.pasoAlPrimero[estado.i] === null) estado.pasoAlPrimero[estado.i] = estado.intentos[estado.i] === 0;
+    const ultima = estado.i === PREGUNTAS.length - 1;
+    acc.innerHTML = `<button class="accion" id="siguiente">${ultima ? 'Ver el cierre' : 'Siguiente pregunta'}</button>`;
+    $('siguiente').addEventListener('click', () => { ultima ? terminar() : (estado.i++, estado.v = 0, dibujarPregunta(), $('cuestionario').scrollIntoView()); });
+    dibujarProgreso();
+  } else {
+    estado.intentos[estado.i]++;
+    const r = $('repaso');
+    r.hidden = false;
+    r.innerHTML = `<h3>${p.repaso.titulo}</h3>${p.repaso.html}`;
+    acc.innerHTML = `<span>Todavía no está. Leé la explicación y probá de nuevo.</span><button class="accion" id="otra">Volver a preguntar</button>`;
+    $('otra').addEventListener('click', () => { estado.v++; dibujarPregunta(); $('cuestionario').scrollIntoView(); });
+  }
+}
+
+function terminar() {
+  dibujarProgreso();
+  $('pregunta').innerHTML = '';
+  const limpias = estado.pasoAlPrimero.filter(Boolean).length;
+  const repasar = PREGUNTAS.filter((p, k) => !estado.pasoAlPrimero[k]);
+  $('resultado').innerHTML = `
+    <p><b>${limpias} de ${PREGUNTAS.length}</b> a la primera. Las cuatro quedaron respondidas bien.</p>
+    ${repasar.length ? `<p>Conviene volver a leer el código de: ${repasar.map((p) => p.tema).join(', ')}.</p>` : '<p>No hace falta repasar nada.</p>'}
+    <p>{{ARCHIVOS: rutas de los archivos del proyecto que se leyeron para armar las preguntas}}</p>`;
+  $('cierre').scrollIntoView();
+}
+
+dibujarPregunta();
+</script>
+</body>
+</html>

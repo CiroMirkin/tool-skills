@@ -10,7 +10,7 @@
 
 </div>
 
-Catorce skills en español, repartidas en tres carpetas (`learn`, `code` y `tools`; el prefijo de cada skill es el nombre de su carpeta), cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Quince skills en español, repartidas en tres carpetas (`learn`, `code` y `tools`; el prefijo de cada skill es el nombre de su carpeta), cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -27,6 +27,7 @@ Catorce skills en español, repartidas en tres carpetas (`learn`, `code` y `tool
 | `tools:policy` | **(En etapa de prueba)** Prepara los documentos legales para lanzar un repositorio: política de privacidad y de seguridad, `SECURITY.md`, términos, cookies, proveedores, procedimientos y un checklist de trámites, todo a partir de lo que el código hace de verdad. |
 | `tools:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
 | `learn:referencia` | Suma un repo o un sitio (`/learn:referencia <url>`), o la ruta de tu carpeta de libros y apuntes (`--docs <ruta>`), a la base de referencias de desarrollo que consultan `learn:roadmap`, `learn:learn` y `learn:doc-estudio`. |
+| `code:cuestioname` | **(En etapa de prueba)** Sortea una parte del sistema de tu proyecto y te toma un cuestionario HTML de 4 preguntas sobre cómo funciona y cómo está implementada; cada error se explica y se vuelve a preguntar con otros datos. |
 | `code:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
 | `learn:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, o un vistazo general del área si no tienes uno, con el enlace de cada fuente. |
 | `tools:use-cases` | Genera el documento de casos de uso de un proyecto (actores, historias de usuario y reglas de negocio) para alguien no técnico. |
