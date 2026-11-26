@@ -66,6 +66,29 @@ siguiente. Lanza OSError."""
 """Pasa por un temporal oculto para que `listar` nunca vea un PNG a medias y lanza OSError."""
 ```
 
+También es eco lo que ya sabe cualquiera que use el framework, pero en la misma frase puede haber un dato invisible que se queda:
+
+```ts
+// Antes
+// Next llama a register al arrancar el servidor y no durante next build
+export const register = async () => {
+// Después
+// register no corre durante next build
+export const register = async () => {
+```
+
+Ejemplo de **Eco** en un comentario que parece aportar contexto, donde el nombre, la condición y el mensaje del error ya lo dicen todo:
+
+```ts
+// Antes, se borra entero
+/** Corta el arranque en producción si falta la cabecera */
+export const exigirCabeceraIp = (env: Partial<NodeJS.ProcessEnv> = process.env) => {
+    if (env.NODE_ENV === "production" && !cabeceraIpDelCliente(env)) {
+        throw new Error("Falta AUTH_IP_HEADER: sin ella el límite de intentos de login por IP se puede evadir.")
+    }
+}
+```
+
 Ejemplos de **Ponytail**:
 
 ```
