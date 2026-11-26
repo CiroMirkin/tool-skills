@@ -10,7 +10,7 @@
 
 </div>
 
-Quince skills en español, repartidas en tres carpetas (`learn`, `code` y `tools`; el prefijo de cada skill es el nombre de su carpeta), cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
+Dieciséis skills en español, repartidas en tres carpetas (`learn`, `code` y `tools`; el prefijo de cada skill es el nombre de su carpeta), cada una con sus pasos y su criterio de terminado, para que Claude Code siga el mismo proceso en cada corrida. Son para quien usa Claude Code y quiere instalarlas todas o solo las que le sirvan.
 
 ## Skills
 
@@ -19,6 +19,7 @@ Quince skills en español, repartidas en tres carpetas (`learn`, `code` y `tools
 | `tools:a3` | **(En etapa de prueba)** Escribe un A3 al estilo Toyota: el problema, su causa, la contramedida, el plan y el seguimiento en una página, como alternativa corta a un spec. |
 | `code:test-audit` | **(En etapa de prueba)** Auditoría profunda y manual de tests con mutantes (a mano y con mutator y crapper, previa aprobación) y refactores en una copia, y señala cuáles no protegen nada, cuáles impiden refactorizar y qué reglas de negocio quedaron sin test. |
 | `code:test-review` | Revisión rápida y automática al planear y al escribir tests: asegura TDD, FIRST y cobertura de las reglas de negocio, y corrige los que no protegen nada, están atados al cómo, abusan de mocks, son complejos o tienen nombre técnico. |
+| `code:dev-work` | Principios para escribir o cambiar código: siempre en una rama propia, primero que funcione, después que esté bien, con evidencia de que anda. Basada en las reglas de Robert C. Martin (Uncle Bob) y Lauren Tan. |
 | `tools:diagrama-hardware` | Dibuja esquemáticos y diagramas de conexionado de circuitos como SVG con schemdraw. Basada en `schemdraw-circuit-generator` de takazudo/claude-resources. |
 | `learn:doc-estudio` | Escribe dos `.md` complementarios que enseñan un tema desde cero (fundamentos y avanzado), con repo de pruebas, tres tareas con tests por doc, diagramas, quiz y fuentes. |
 | `tools:el-gremio` | Somete una decisión a 5 asesores que la analizan por separado, se revisan a ciegas y cierran con el veredicto de un presidente. |
@@ -48,6 +49,7 @@ Los enlaces hacen que un `git pull` actualice las skills. Para instalar solo una
 Algunas skills necesitan algo más:
 
 - **`tools:diagrama-hardware`**: Python 3 con `schemdraw` y `matplotlib`. Con [uv](https://docs.astral.sh/uv/) alcanza con `uv run --no-project --with schemdraw --with matplotlib python script.py`. Para simular el circuito usa `ngspice` (`sudo apt install ngspice`); si falta, la skill pregunta antes de instalarlo.
+- **`code:dev-work`**: usa `code:test-review`, así que conviene instalar las dos, y [dryer](https://github.com/unclebob/dryer) para buscar duplicación (pide aprobación antes de instalarlo).
 - **`learn:doc-estudio`**: Python 3 y `curl`, las skills `diagram-design` y `humanizer`, y las herramientas para compilar y correr el código del tema, como `arduino-cli` en firmware.
 - **`learn:learn`**: Python 3, [uv](https://docs.astral.sh/uv/) (instala `pygments` al correr) y internet para investigar. Usa las skills `diagram-design` y `humanizer`, y las herramientas para ejecutar el código del tema. Las lecciones se guardan en `learn:learn/memoria/`, que git ignora.
 - **`tools:informe-cambios`**: Node.js con `npm` (instala sus dependencias la primera vez), Python 3 e internet para bajar las fuentes. Usa la skill `humanizer` y `pdftoppm` para revisar los PDF.
