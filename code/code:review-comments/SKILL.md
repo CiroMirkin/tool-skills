@@ -1,6 +1,6 @@
 ---
 name: code:review-comments
-description: Revisa los comentarios del código, corrige solos los que no piden criterio y señala los que sí (cuáles mienten y dónde falta uno). Usar cuando el usuario pida revisar, limpiar o auditar comentarios, y al terminar de editar código que agregó o tocó comentarios.
+description: Borra los comentarios del código dentro del alcance y escribe de nuevo solo los que el código necesita, y señala lo que pide aprobación. Usar cuando el usuario pida revisar, limpiar o auditar comentarios, y al terminar de editar código que agregó o tocó comentarios.
 ---
 
 # Revisar comentarios
@@ -11,76 +11,60 @@ El código ya dice *qué* hace. Un comentario se gana su lugar contando lo **inv
 
 Lo que el usuario nombre (archivo, carpeta, commit, rama). Si no nombra nada, el diff sin commitear; si está limpio, el último commit.
 
-Al terminar de editar código, el alcance son los comentarios que el propio diff agregó o tocó, y se corre sin que el usuario lo pida.
+En un archivo o carpeta entran todos sus comentarios. En un diff (sin commitear, commit o rama) entran solo los que el diff agregó o tocó y los que acompañan líneas modificadas.
+
+Al terminar de editar código, el alcance es el del propio diff y se corre sin que el usuario lo pida.
 
 ## Pasos
 
-1. **Leer cada comentario del alcance junto al código que acompaña** (incluye docstrings y cabeceras). Hecho cuando cada uno quedó clasificado en una de las categorías de abajo.
-2. **Buscar los huecos**: código cuyo motivo es invisible y no tiene comentario (número mágico, `sleep`, orden de líneas que importa, `catch` que traga errores, workaround, valor de config externo, regex cuyo nombre o validación cercana no dicen qué valida). Para cada uno, buscar el motivo en `git log -L`/`git blame`, el commit, la issue o el ADR que lo introdujo. Hecho cuando cada hueco tiene su motivo encontrado o quedó marcado como *pregunta para el usuario*: el motivo se cita, no se inventa.
-3. **Aplicar lo mecánico**: cada hallazgo mecánico se edita directo, sin pedir aprobación. Hecho cuando ninguno queda sin aplicar.
-4. **Reportar lo que pide criterio**, agrupado por categoría. Cada hallazgo lleva un id correlativo en todo el reporte (C1, C2…, sin reiniciar por categoría) para que el usuario los apruebe por id, y `archivo:línea`. Debajo va un bloque de código con el comentario actual y, en la línea siguiente, el propuesto:
+1. **Borrar** todos los comentarios y docstrings del alcance, sin clasificarlos: los borrados se descartan. Se quedan los que cambian el comportamiento o son obligatorios: shebang, encoding, directivas (`eslint-disable`, `@ts-expect-error`, `# noqa`, `# type: ignore`, `//go:build`), cabeceras de licencia y docstrings que el programa lee (ayuda de CLI, docs de API). Si un docstring era todo el cuerpo, queda `pass`. Hecho cuando no queda ningún otro en el alcance y borrarlos no cambió el comportamiento.
+2. **Leer el código nuevo y el modificado** del alcance, ya sin comentarios, y marcar cada lugar con un motivo invisible (número mágico, `sleep`, orden de líneas que importa, `catch` que traga errores, workaround, valor de config externo, regex cuyo nombre o validación cercana no dicen qué valida). El motivo se busca en el código, en los mensajes de commit (`git log -L`, `git blame`), en la issue o en el ADR. El texto de un comentario viejo, visto en el diff o en el historial, no cuenta como fuente. Hecho cuando cada lugar tiene su motivo encontrado o quedó marcado como *pregunta para el usuario*: el motivo se cita, no se inventa.
+3. **Escribir** directo, sin pedir aprobación, un comentario en cada lugar con motivo encontrado, según *Qué se escribe*, *Cómo se escribe* y *Lo invisible*. Hecho cuando ninguno queda sin escribir.
+4. **Reportar** cuántos comentarios se borraron y cuántos se escribieron, y en qué archivos. Aparte va lo que espera aprobación: preguntas, secciones y todo cambio de código (ej. un nombre mejor en vez de un comentario). Cada uno lleva un id correlativo (C1, C2…) para que el usuario los apruebe por id, y `archivo:línea`. Debajo va un bloque de código con el código y, abajo, la pregunta o el cambio propuesto. En una sección, el bloque lleva el lugar donde empieza y, abajo, el archivo propuesto. Se aplica recién cuando el usuario lo apruebe.
 
-   ```tsx
-   // 7rem = header h-16 + py-6 del layout; solo la tabla scrollea
-   // 7rem = header h-16 + py-6 del layout (Alto fijo para que solo scrollee la tabla)
-   ```
+## Qué se escribe
 
-   En un hueco, el bloque lleva el código y, abajo, el comentario nuevo o la pregunta. En una sección, el bloque lleva el separador y, abajo, el archivo propuesto. El código entra en el bloque solo cuando también cambia (ej. un nombre mejor en vez de un eco). Lo que pide criterio se aplica recién cuando el usuario lo apruebe.
-   Al final, una línea con cuántos comentarios se corrigieron solos y en qué archivos.
+Solo lo invisible (ver la lista de abajo), nunca eco. **Eco** es repetir el nombre de la función, variable, clase o método, o narrar lo que la línea ya dice (`# incrementa el contador`). También es eco el ruido: código comentado (para eso está git), separadores sin nombre, `// fin del if`, autor y fecha, historial de cambios. Si dan ganas de escribir un eco porque el nombre es malo, proponer el nombre mejor en vez del comentario.
 
-## Mecánico y criterio
+Si una parte del archivo hace algo distinto del resto y se la podría nombrar como una **sección**, no se le pone un separador: se recomienda refactorizarla a su propio archivo.
 
-- **Mecánico** (se aplica solo): eco, mezcla, confuso, ponytail y mentira cuando el código deja claro cuál es la verdad (parámetro que ya no existe, TODO ya resuelto). Todo lo que el comentario dice queda igual o sale porque el código ya lo dice.
-- **Criterio** (espera al usuario): hueco, sección, una mentira donde no se sabe si miente el comentario o el código, y todo cambio que toque código.
-
-## Categorías
-
-- **Se queda**: cuenta algo invisible (ver la lista de abajo).
-- **Eco** → borrar: repite el nombre de la función, variable, clase o método, o narra lo que la línea ya dice (`# incrementa el contador`). También es eco el ruido: código comentado (para eso está git), separadores sin nombre, `// fin del if`, autor y fecha, historial de cambios. Si el eco existe porque el nombre es malo, proponer el nombre mejor en vez del comentario.
-- **Mezcla** → reescribir: tiene algo invisible enterrado entre eco. Quedarse solo con lo invisible.
-- **Mentira** → corregir o borrar: contradice al código actual (desfasado, TODO ya resuelto, parámetro que ya no existe). Es peor que no tener comentario.
-- **Hueco** → agregar: salió del paso 2.
-- **Confuso** → reescribir: cuenta algo invisible pero no se lee de corrido (ver *Cómo se escribe*).
-- **Ponytail** → reescribir: un comentario que empieza con `ponytail:` se reescribe según lo que dice. Si es un riesgo conocido, empieza con `ADVERTENCIA:` y el texto se reescribe de corrido. Si es una recomendación para cuando el sistema crezca, se dice con *al escalar cambiar a …* o *si … entonces …*.
-- **Sección** → proponer un archivo: un comentario que delimita una sección con nombre muestra que el archivo hace varias cosas. Recomendar refactorizar cada sección a su propio archivo.
-
-Ejemplos de **Mezcla**, donde lo que se va se puede leer en el código:
+De un dato invisible se escribe solo eso, sin lo que se puede leer en el código:
 
 ```python
-# Antes
+# Con eco
 """IMDb ID que aparece en `texto` (ej. un link de imdb.com), o None."""
-# Después
+# Se escribe
 """IMDb ID que aparece en `texto` (ej. un link de imdb.com)"""
 
-# Antes
+# Con eco
 """Baja el poster de OMDb a `destino` (de `destino_poster`); devuelve si se pudo. Corre fuera del hilo de la UI."""
-# Después
+# Se escribe
 """Corre fuera del hilo de la UI."""
 
-# Antes
+# Con eco
 """Escribe los bytes `png` como captura en `posicion_ms` y devuelve la ruta. Crea `capturas/`
 si falta. Escribe a un temporal oculto y lo pasa al nombre final recién completo, así `listar`
 nunca ve un PNG a medias. Nunca pisa: si otra captura ocupa el nombre entre medio, prueba el
 siguiente. Lanza OSError."""
-# Después
+# Se escribe
 """Pasa por un temporal oculto para que `listar` nunca vea un PNG a medias y lanza OSError."""
 ```
 
-También es eco lo que ya sabe cualquiera que use el framework, pero en la misma frase puede haber un dato invisible que se queda:
+También es eco lo que ya sabe cualquiera que use el framework, pero en la misma frase puede haber un dato invisible que se escribe:
 
 ```ts
-// Antes
+// Con eco
 // Next llama a register al arrancar el servidor y no durante next build
 export const register = async () => {
-// Después
+// Se escribe
 // register no corre durante next build
 export const register = async () => {
 ```
 
-Ejemplo de **Eco** en un comentario que parece aportar contexto, donde el nombre, la condición y el mensaje del error ya lo dicen todo:
+Hay eco que parece aportar contexto. Acá el nombre, la condición y el mensaje del error ya lo dicen todo:
 
 ```ts
-// Antes, se borra entero
+// Con eco, no se escribe nada
 /** Corta el arranque en producción si falta la cabecera */
 export const exigirCabeceraIp = (env: Partial<NodeJS.ProcessEnv> = process.env) => {
     if (env.NODE_ENV === "production" && !cabeceraIpDelCliente(env)) {
@@ -89,42 +73,18 @@ export const exigirCabeceraIp = (env: Partial<NodeJS.ProcessEnv> = process.env) 
 }
 ```
 
-Ejemplos de **Ponytail**:
-
-```
-// Antes
-// ponytail: sin lock, un lote puede entrar entre el count y el update; bloquear si pasa en la práctica
-// Después
-// ADVERTENCIA: sin lock un lote puede entrar entre el count y el update y si pasa en la práctica entonces hay que bloquear
-
-// Antes
-// ponytail: lista en memoria
-// Después
-// Al escalar cambiar a una tabla en la base porque la lista en memoria no aguanta muchos pedidos
-```
-
-Ejemplos de **Hueco** con regex, donde el comentario o el nombre dicen qué valida:
+En una regex el comentario o el nombre dicen qué valida, salvo que ya lo diga la validación cercana:
 
 ```ts
-// Antes
+// El mensaje ya lo aclara y no hace falta nada
 .regex(/^\d{7,8}$/, "El DNI debe tener 7 u 8 dígitos")
-// Después, el mensaje ya lo aclara y no hace falta nada
 
-// Antes
-.regex(/^\d{7,8}$/)
-// Después, con un comentario
+// Sin mensaje va un comentario
 // DNI de 7 u 8 dígitos
 .regex(/^\d{7,8}$/)
-// Después, con un nombre
+
+// O un nombre
 const DNI = regex(/^\d{7,8}$/) // el nombre ya dice qué valida y no necesita comentario
-```
-
-Ejemplos de **Sección**:
-
-```
-# --- escaneo ---
-// ==================== TOUCH ====================
-// ==================== WIFI ====================
 ```
 
 ## Cómo se escribe
@@ -243,7 +203,7 @@ Un signo se queda solo cuando es lo que mejor se lee:
 
 ## Lo invisible
 
-No hace falta documentar todo esto siempre; depende del caso. Es la lista contra la que se mide cada comentario y cada hueco:
+No hace falta documentar todo esto siempre; depende del caso. Es la lista contra la que se mide cada comentario antes de escribirlo:
 
 - **Por qué** esta solución, y **por qué no** la otra que parecía más obvia o natural.
 - **Para qué** existe el código: dónde encaja en la foto global, qué dependencias invisibles tiene, en qué situación se podría borrar.
@@ -255,4 +215,4 @@ No hace falta documentar todo esto siempre; depende del caso. Es la lista contra
 - **Deuda técnica**: hasta dónde aguanta la solución (librería sin soporte, infraestructura que llega a N usuarios).
 - **Terceros**: cómo se comporta una librería o framework en un uso particular o mal documentado; sorpresas que dio, para llevárselas una sola vez.
 - **API pública** de propósito general: su contrato. Describir parámetros y retorno solo cuando agregan contexto que el nombre y el tipo no dan (en lenguajes interpretados, el docstring además alimenta al IDE).
-- **Arqueología**: en código heredado sin tests y sin nadie a quien preguntar, lo que se descifró depurando a prueba y error. Se queda, y debe decir que es comportamiento deducido y por qué se comentó en vez de refactorizar.
+- **Arqueología**: en código heredado sin tests y sin nadie a quien preguntar, lo que se descifró depurando a prueba y error. Se escribe, y debe decir que es comportamiento deducido y por qué se comentó en vez de refactorizar.

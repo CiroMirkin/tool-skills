@@ -29,7 +29,7 @@ Dieciséis skills en español, repartidas en tres carpetas (`learn`, `code` y `t
 | `tools:readme` | Escribe o reescribe el `README.md` de un proyecto a partir de relevar todo el repo. |
 | `learn:referencia` | Suma un repo o un sitio (`/learn:referencia <url>`), o la ruta de tu carpeta de libros y apuntes (`--docs <ruta>`), a la base de referencias de desarrollo que consultan `learn:roadmap`, `learn:learn` y `learn:doc-estudio`. |
 | `code:cuestioname` | **(En etapa de prueba)** Sortea una parte del sistema de tu proyecto y te toma un cuestionario HTML de 4 preguntas sobre cómo funciona y cómo está implementada; cada error se explica y se vuelve a preguntar con otros datos. |
-| `code:review-comments` | Revisa los comentarios del código y señala cuáles sobran, cuáles mienten y dónde falta uno. |
+| `code:review-comments` | Borra los comentarios del código dentro del alcance y escribe de nuevo solo los que el código necesita. |
 | `learn:roadmap` | Investiga temas en distintas fuentes y escribe un roadmap de estudio aplicado a tu proyecto, o un vistazo general del área si no tienes uno, con el enlace de cada fuente. |
 | `tools:use-cases` | Genera el documento de casos de uso de un proyecto (actores, historias de usuario y reglas de negocio) para alguien no técnico. |
 
